@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0b0f19;
+  --color-slate: #5b6472;
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-accent: #2a78d6;
+  --color-accent-2: #4a3aa7;
+
+  /*
+   * Pipeline stage colors — fixed order, slots 1-5 of the validated 8-hue
+   * categorical reference palette (blue, orange, aqua, yellow, magenta),
+   * used as-is so the adjacent-pair CVD guarantee holds across the loop.
+   */
+  --color-stage-1: #2a78d6; /* know */
+  --color-stage-2: #eb6834; /* sense */
+  --color-stage-3: #1baf7a; /* decide */
+  --color-stage-4: #eda100; /* act */
+  --color-stage-5: #e87ba4; /* learn */
+
+  /* Status red — reserved, never reused as a categorical slot. Marks the
+     one deliberately urgent job ("Recover for me") and the typhoon scenario. */
+  --color-status-critical: #e34948;
+  --color-status-critical-bg: color-mix(in srgb, var(--color-status-critical) 8%, var(--color-surface));
+
+  --color-ecosystem: #4a3aa7;
+  --color-ecosystem-bg: color-mix(in srgb, var(--color-ecosystem) 6%, var(--color-surface));
+
+  --shadow-sm: 0 1px 2px -1px color-mix(in srgb, var(--color-ink) 12%, transparent), 0 2px 4px -2px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  --shadow-md: 0 8px 24px -8px color-mix(in srgb, var(--color-ink) 22%, transparent);
+  --shadow-lg: 0 24px 60px -16px color-mix(in srgb, var(--color-ink) 30%, transparent);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+@layer utilities {
+  .gradient-wash {
+    background: radial-gradient(ellipse at top, color-mix(in srgb, var(--color-accent) 12%, transparent) 0%, var(--color-bg) 60%);
+  }
+  .gradient-text {
+    background: linear-gradient(to right, var(--color-accent), var(--color-ecosystem));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  .gradient-bar {
+    background: linear-gradient(to right, var(--color-stage-1), var(--color-stage-2), var(--color-stage-3), var(--color-stage-4), var(--color-stage-5));
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
