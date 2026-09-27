@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Info } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card, SectionLabel } from "@/components/Card";
+import { Disclosure } from "@/components/Disclosure";
 import { Toggle } from "@/components/Toggle";
 import { useTripStore } from "@/state/tripStore";
 import type { AutonomyMode } from "@/types/travel";
@@ -89,23 +90,24 @@ export default function AutopilotSettingsPage() {
           </div>
         </Card>
 
-        <Card>
-          <SectionLabel>Only act if</SectionLabel>
-          <div className="divide-y divide-[var(--color-border)]">
-            {actOnlyIf.map((rule) => (
-              <Toggle key={rule} checked={rules[rule]} onChange={(v) => setRules((r) => ({ ...r, [rule]: v }))} label={rule} />
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <SectionLabel>Always ask me for</SectionLabel>
-          <ul className="space-y-1 text-sm text-[var(--color-ink)]">
-            {alwaysAskFor.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-        </Card>
+        <Disclosure label={`${Object.values(rules).filter(Boolean).length} advanced rules active`}>
+          <Card>
+            <SectionLabel>Only act if</SectionLabel>
+            <div className="divide-y divide-[var(--color-border)]">
+              {actOnlyIf.map((rule) => (
+                <Toggle key={rule} checked={rules[rule]} onChange={(v) => setRules((r) => ({ ...r, [rule]: v }))} label={rule} />
+              ))}
+            </div>
+            <div className="mt-4 border-t border-[var(--color-border)] pt-3">
+              <SectionLabel>Always ask me for</SectionLabel>
+              <ul className="space-y-1 text-sm text-[var(--color-ink)]">
+                {alwaysAskFor.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          </Card>
+        </Disclosure>
 
         <Card>
           <Toggle

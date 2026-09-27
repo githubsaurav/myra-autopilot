@@ -1,19 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { Card, SectionLabel } from "@/components/Card";
+import { Card } from "@/components/Card";
+import { Disclosure } from "@/components/Disclosure";
 import { useTripStore } from "@/state/tripStore";
 
 const actionsFor = (optionId: "A" | "B") =>
   optionId === "A"
-    ? [
-        "Move island activity to Day 6",
-        "Extend hotel by one night",
-        "Shift airport transfer by 3 hours",
-        "Update itinerary",
-        "Notify co-travellers",
-      ]
-    : ["Replace island activity with indoor local experience", "Update itinerary", "Notify co-travellers"];
+    ? ["Move island activity to Day 6", "Extend hotel by one night", "Shift airport transfer by 3 hours", "Notify co-travellers"]
+    : ["Replace island activity with indoor local experience", "Notify co-travellers"];
 
 export default function ApplyChangesPage() {
   const navigate = useNavigate();
@@ -21,58 +16,50 @@ export default function ApplyChangesPage() {
   const option = selectedOption ?? disruption.options.find((o) => o.recommended)!;
   const net = option.extraCost - option.refundImpact;
   const withinSpendLimit = option.extraCost <= traveller.spendLimit || traveller.autonomyMode !== "bounded";
+  const refundOk = !traveller.refundableOnly || option.refundImpact === 0;
 
   return (
-    <AppShell title="Review & Approve">
-      <div className="space-y-5 px-4 py-5">
+    <AppShell title="Confirm Changes">
+      <div className="space-y-4 px-4 py-5">
         <div>
-          <h1 className="text-lg font-black text-[var(--color-ink)]">Review before Myra acts</h1>
-          <p className="text-sm text-[var(--color-slate)]">Applying Option {option.id}: {option.title}</p>
+          <h1 className="text-lg font-black text-[var(--color-ink)]">Here&apos;s what Myra will do</h1>
         </div>
 
-        <div>
-          <SectionLabel>Actions</SectionLabel>
-          <Card className="space-y-2 p-0">
-            {actionsFor(option.id).map((action, i) => (
-              <div key={action} className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-2.5 text-sm last:border-0">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-navy-soft)] text-[10px] font-bold text-[var(--color-navy)]">
-                  {i + 1}
-                </span>
-                <span className="text-[var(--color-ink)]">{action}</span>
-              </div>
-            ))}
-          </Card>
-        </div>
-
-        <Card>
-          <SectionLabel>Cost summary</SectionLabel>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-[var(--color-slate)]">New charges</span>
-              <span className="font-semibold text-[var(--color-ink)]">₹{option.extraCost.toLocaleString("en-IN")}</span>
+        <Card className="space-y-2.5 p-0">
+          {actionsFor(option.id).map((action, i) => (
+            <div key={action} className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-2.5 text-sm last:border-0">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-navy-soft)] text-[10px] font-bold text-[var(--color-navy)]">
+                {i + 1}
+              </span>
+              <span className="text-[var(--color-ink)]">{action}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[var(--color-slate)]">Refunds</span>
-              <span className="font-semibold text-[var(--color-ink)]">₹{option.refundImpact.toLocaleString("en-IN")}</span>
-            </div>
-            <div className="flex justify-between border-t border-[var(--color-border)] pt-1.5">
-              <span className="font-semibold text-[var(--color-ink)]">Net impact</span>
-              <span className="font-bold text-[var(--color-navy)]">₹{net.toLocaleString("en-IN")}</span>
-            </div>
-          </div>
+          ))}
         </Card>
 
         <Card>
-          <SectionLabel>Guardrail check</SectionLabel>
-          <div className="space-y-1.5 text-sm text-[var(--color-ink)]">
-            <GuardrailRow label="Under spend limit" ok={withinSpendLimit} />
-            <GuardrailRow label="Refundable-only rule respected" ok={!traveller.refundableOnly || option.refundImpact === 0} />
-            <GuardrailRow label="Approved supplier set" ok />
-            <GuardrailRow label="Traveller approval required" ok />
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-[var(--color-slate)]">Extra cost</span>
+            <span className="text-lg font-black text-[var(--color-ink)]">₹{net.toLocaleString("en-IN")}</span>
           </div>
         </Card>
 
-        <div className="space-y-2 pb-2">
+        <div className="flex items-start gap-2 rounded-xl bg-[var(--color-success-soft)] p-3">
+          <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[var(--color-success)]" />
+          <p className="text-xs font-medium text-[var(--color-ink)]">
+            Within your autopilot rules — {refundOk ? "refundable" : "reviewed"} and {withinSpendLimit ? "under your spend limit" : "flagged for review"}.
+          </p>
+        </div>
+
+        <Disclosure label="View guardrail details">
+          <ul className="space-y-1 rounded-xl bg-black/[0.03] p-3 text-xs text-[var(--color-ink)]">
+            <li>• Under spend limit: {withinSpendLimit ? "Yes" : "No"}</li>
+            <li>• Refundable-only rule respected: {refundOk ? "Yes" : "No"}</li>
+            <li>• Approved supplier network: Yes</li>
+            <li>• Traveller approval required: Yes</li>
+          </ul>
+        </Disclosure>
+
+        <div className="space-y-2 pb-2 pt-2">
           <button
             type="button"
             onClick={() => {
@@ -81,12 +68,12 @@ export default function ApplyChangesPage() {
             }}
             className="w-full rounded-xl bg-[var(--color-red)] py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           >
-            Approve & apply changes
+            Confirm changes
           </button>
           <button
             type="button"
             onClick={() => navigate("/recovery-options")}
-            className="w-full rounded-xl border border-[var(--color-border)] py-3 text-sm font-semibold text-[var(--color-slate)] hover:bg-black/[0.03]"
+            className="w-full py-2 text-center text-xs font-semibold text-[var(--color-slate)]"
           >
             Cancel
           </button>
@@ -96,12 +83,3 @@ export default function ApplyChangesPage() {
   );
 }
 
-function GuardrailRow({ label, ok }: { label: string; ok: boolean }) {
-  return (
-    <div className="flex items-center gap-2">
-      <ShieldCheck size={15} className={ok ? "text-[var(--color-success)]" : "text-[var(--color-warning)]"} />
-      <span>{label}</span>
-      <span className="ml-auto font-bold">{ok ? "✅" : "⚠"}</span>
-    </div>
-  );
-}

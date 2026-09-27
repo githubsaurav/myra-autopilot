@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { CloudLightning, ChevronRight } from "lucide-react";
+import { CloudLightning } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { Card, SectionLabel } from "@/components/Card";
 import { MyraBubble } from "@/components/MyraBubble";
 import { useTripStore } from "@/state/tripStore";
 
@@ -10,33 +9,24 @@ export default function DisruptionAlertPage() {
   const { disruption } = useTripStore();
 
   return (
-    <AppShell title="Disruption Alert">
-      <div className="space-y-5 px-4 py-5">
-        <div className="rounded-2xl border border-[var(--color-red)]/25 bg-[var(--color-red-soft)] p-4">
-          <div className="flex items-center gap-2 text-[var(--color-red)]">
-            <CloudLightning size={20} />
-            <p className="text-base font-black">{disruption.headline}</p>
+    <AppShell title="Trip Alert">
+      <div className="space-y-5 px-4 py-6">
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-red-soft)] text-[var(--color-red)]">
+            <CloudLightning size={26} />
+          </span>
+          <div>
+            <p className="text-lg font-black text-[var(--color-ink)]">{disruption.headline}</p>
+            <p className="mt-1 text-sm text-[var(--color-slate)]">{disruption.detail}</p>
           </div>
-          <p className="mt-1.5 text-sm text-[var(--color-ink)]">{disruption.detail}</p>
         </div>
 
-        <div>
-          <SectionLabel>What this affects</SectionLabel>
-          <Card>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {disruption.dependencyChain.map((node, i) => (
-                <div key={node} className="flex items-center gap-1.5">
-                  <span className="rounded-lg bg-black/[0.04] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-ink)]">
-                    {node}
-                  </span>
-                  {i < disruption.dependencyChain.length - 1 && <ChevronRight size={13} className="text-[var(--color-slate)]" />}
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
+        <p className="rounded-xl bg-black/[0.03] px-3.5 py-3 text-center text-sm text-[var(--color-ink)]">
+          This could affect your {disruption.dependencyChain.slice(0, -1).join(", ").toLowerCase()} and{" "}
+          {disruption.dependencyChain.at(-1)?.toLowerCase()}.
+        </p>
 
-        <MyraBubble>I checked the rest of your trip and found two workable recovery plans.</MyraBubble>
+        <MyraBubble>I found two ways to handle this.</MyraBubble>
 
         <div className="space-y-2 pt-2">
           <button
@@ -44,12 +34,12 @@ export default function DisruptionAlertPage() {
             onClick={() => navigate("/recovery-options")}
             className="w-full rounded-xl bg-[var(--color-red)] py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           >
-            Review recovery options
+            See your options
           </button>
           <button
             type="button"
             onClick={() => navigate("/trip-home")}
-            className="w-full rounded-xl border border-[var(--color-border)] py-3 text-sm font-semibold text-[var(--color-slate)] hover:bg-black/[0.03]"
+            className="w-full py-2 text-center text-xs font-semibold text-[var(--color-slate)]"
           >
             I&apos;ll handle it myself
           </button>

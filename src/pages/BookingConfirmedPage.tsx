@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { Plane, Hotel, CheckCircle2, Users, CreditCard } from "lucide-react";
+import { Plane, Hotel, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { Card, SectionLabel } from "@/components/Card";
+import { Card } from "@/components/Card";
+import { DestinationHero } from "@/components/DestinationHero";
 import { useTripStore } from "@/state/tripStore";
-import { maskedIdentifiers, coTravellers } from "@/data/demoTraveller";
+import { coTravellers, maskedIdentifiers } from "@/data/demoTraveller";
 
 export default function BookingConfirmedPage() {
   const navigate = useNavigate();
@@ -13,68 +14,43 @@ export default function BookingConfirmedPage() {
 
   return (
     <AppShell title="Booking Confirmed" showBack={false}>
-      <div className="space-y-5 px-4 py-5">
+      <div className="space-y-4 px-4 py-5">
         <div className="flex items-center gap-2 text-[var(--color-success)]">
-          <CheckCircle2 size={22} />
-          <div>
-            <p className="text-base font-black text-[var(--color-ink)]">Booking confirmed</p>
-            <p className="text-sm text-[var(--color-slate)]">Your {trip.destination} trip is now live.</p>
-          </div>
+          <CheckCircle2 size={18} />
+          <p className="text-sm font-bold text-[var(--color-ink)]">Booking confirmed</p>
         </div>
 
-        <Card>
-          <div className="flex items-center gap-2">
+        <DestinationHero
+          title={trip.destination}
+          subtitle={`${trip.startDate} – ${trip.endDate} · Aarav + ${coTravellers.join(" + ")}`}
+        />
+
+        <Card className="divide-y divide-[var(--color-border)] p-0">
+          <div className="flex items-center gap-3 px-4 py-3">
             <Plane size={16} className="text-[var(--color-navy)]" />
-            <p className="text-sm font-bold text-[var(--color-ink)]">{flight?.title}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[var(--color-ink)]">{flight?.title}</p>
+            </div>
+            <span className="text-xs font-semibold text-[var(--color-success)]">Confirmed</span>
           </div>
-          <p className="mt-1 text-xs text-[var(--color-slate)]">{flight?.meta}</p>
-        </Card>
-
-        <Card>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 px-4 py-3">
             <Hotel size={16} className="text-[var(--color-navy)]" />
-            <p className="text-sm font-bold text-[var(--color-ink)]">{hotel?.title}</p>
-          </div>
-          <p className="mt-1 text-xs text-[var(--color-slate)]">{hotel?.meta}</p>
-        </Card>
-
-        <Card>
-          <SectionLabel>Trip details</SectionLabel>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-[var(--color-slate)]">Dates</p>
-              <p className="font-semibold text-[var(--color-ink)]">
-                {trip.startDate} – {trip.endDate}
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[var(--color-ink)]">{hotel?.title}</p>
             </div>
-            <div>
-              <p className="flex items-center gap-1 text-[var(--color-slate)]">
-                <Users size={12} /> Travellers
-              </p>
-              <p className="font-semibold text-[var(--color-ink)]">Aarav + {coTravellers.join(" + ")}</p>
-            </div>
-            <div>
-              <p className="text-[var(--color-slate)]">Booking ID</p>
-              <p className="font-semibold text-[var(--color-ink)]">{maskedIdentifiers.bookingId}</p>
-            </div>
-            <div>
-              <p className="flex items-center gap-1 text-[var(--color-slate)]">
-                <CreditCard size={12} /> Paid via
-              </p>
-              <p className="font-semibold text-[var(--color-ink)]">{maskedIdentifiers.paymentInstrument}</p>
-            </div>
+            <span className="text-xs font-semibold text-[var(--color-success)]">Confirmed</span>
           </div>
         </Card>
+        <p className="-mt-2 px-1 text-[11px] text-[var(--color-slate)]">Booking {maskedIdentifiers.bookingId}</p>
 
         <div className="rounded-2xl border border-[var(--color-navy)]/15 bg-[var(--color-navy-soft)] p-4">
-          <p className="text-sm font-black text-[var(--color-navy)]">Your Trip is Live</p>
-          <p className="mt-1.5 text-sm text-[var(--color-ink)]">
-            Myra can now stay with your trip, help you prepare, adapt plans when things change, and coordinate
-            actions across your bookings.
+          <p className="text-sm font-black text-[var(--color-navy)]">Your trip is now live</p>
+          <p className="mt-1 text-sm text-[var(--color-ink)]">
+            Myra can stay with it — helping you prepare, adjust plans, and handle things if they change.
           </p>
         </div>
 
-        <div className="space-y-2 pb-2">
+        <div className="space-y-2 pb-2 pt-2">
           <button
             type="button"
             onClick={() => {
@@ -88,7 +64,7 @@ export default function BookingConfirmedPage() {
           <button
             type="button"
             onClick={() => navigate("/trip-home")}
-            className="w-full rounded-xl border border-[var(--color-border)] py-3 text-sm font-semibold text-[var(--color-slate)] hover:bg-black/[0.03]"
+            className="w-full py-2 text-center text-xs font-semibold text-[var(--color-slate)]"
           >
             Not now
           </button>

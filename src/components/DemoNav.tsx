@@ -21,7 +21,7 @@ const steps: { path: string; label: string }[] = [
 ];
 
 export function DemoNav() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const { resetDemo } = useTripStore();
 
   return (

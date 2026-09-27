@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card, SectionLabel } from "@/components/Card";
-import { Chip } from "@/components/Chip";
 import { MyraBubble } from "@/components/MyraBubble";
 import { useTripStore } from "@/state/tripStore";
 import { originalDay5, adaptedDay5 } from "@/data/demoTrip";
@@ -49,15 +48,9 @@ export default function AdaptTripPage() {
           </div>
         </div>
 
-        <Card>
-          <SectionLabel>Impact summary</SectionLabel>
-          <div className="flex flex-wrap gap-1.5">
-            <Chip tone="success">Travel time -2h 30m</Chip>
-            <Chip tone="success">Walking -35%</Chip>
-            <Chip tone="navy">Incremental cost ₹0</Chip>
-            <Chip tone="navy">Must-do activities preserved: Yes</Chip>
-          </div>
-        </Card>
+        <p className="rounded-xl bg-[var(--color-success-soft)] px-3.5 py-3 text-sm font-medium text-[var(--color-ink)]">
+          2.5 hrs less travel, 35% less walking, no extra cost — your must-dos stay.
+        </p>
 
         {adaptApplied ? (
           <div className="flex items-center gap-2 rounded-xl bg-[var(--color-success-soft)] p-3 text-sm font-semibold text-[var(--color-success)]">

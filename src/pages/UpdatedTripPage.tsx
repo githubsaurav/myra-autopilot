@@ -9,13 +9,17 @@ export default function UpdatedTripPage() {
   const navigate = useNavigate();
   const { trip, selectedOption, recoveryFeedback, setRecoveryFeedback } = useTripStore();
   const dayFiveSix = trip.itinerary.filter((i) => i.day === 5 || i.day === 6);
-  const coordinatedCount = trip.bookings.filter((b) => b.status === "changed" || b.status === "cancelled").length;
-  const changedCount = trip.itinerary.filter((i) => i.tag).length;
 
   return (
     <AppShell title="Updated Trip">
       <div className="space-y-5 px-4 py-5">
-        <h1 className="text-lg font-black text-[var(--color-ink)]">My {trip.destination} Trip — Updated</h1>
+        <div>
+          <h1 className="text-lg font-black text-[var(--color-ink)]">Your trip is updated</h1>
+          <p className="mt-1 text-sm text-[var(--color-slate)]">
+            +₹{selectedOption?.extraCost.toLocaleString("en-IN") ?? 0} · your island experience is{" "}
+            {selectedOption?.preservesOriginal ? "preserved" : "replaced"}.
+          </p>
+        </div>
 
         <Card className="divide-y divide-[var(--color-border)] p-0">
           {dayFiveSix.map((item) => (
@@ -26,16 +30,6 @@ export default function UpdatedTripPage() {
               {item.tag && <Chip tone="navy">{item.tag}</Chip>}
             </div>
           ))}
-        </Card>
-
-        <Card>
-          <SectionLabel>Outcome summary</SectionLabel>
-          <ul className="space-y-1 text-sm text-[var(--color-ink)]">
-            <li>• {coordinatedCount} bookings coordinated</li>
-            <li>• {changedCount} itinerary change{changedCount === 1 ? "" : "s"}</li>
-            <li>• Net additional cost ₹{selectedOption?.extraCost.toLocaleString("en-IN") ?? 0}</li>
-            <li>• Original island experience {selectedOption?.preservesOriginal ? "preserved" : "replaced"}</li>
-          </ul>
         </Card>
 
         <Card>
