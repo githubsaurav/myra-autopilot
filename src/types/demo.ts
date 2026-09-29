@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react";
+
 export type AutonomyMode = "recommend" | "approval" | "bounded";
 export type TravelPace = "relaxed" | "balanced" | "packed";
 export type WalkingLevel = "low" | "medium" | "high";
@@ -16,7 +18,7 @@ export interface TravellerProfile {
   memoryEnabled: boolean;
 }
 
-export type BookingType = "flight" | "hotel" | "transfer" | "activity";
+export type BookingType = "flight" | "hotel" | "transfer" | "activity" | "ferry";
 export type BookingStatus = "confirmed" | "affected" | "moved" | "cancelled" | "completed";
 
 export interface Booking {
@@ -80,9 +82,11 @@ export interface DestinationOption {
   foodFit: string;
   weatherFit: string;
   flightDuration: string;
-  parentFriendly: "Low" | "Medium" | "High";
+  fitLabel: string;
+  fitScore: "Low" | "Medium" | "High";
   reason: string;
   recommended?: boolean;
+  icon: LucideIcon;
 }
 
 export interface ContextualOption {
@@ -98,7 +102,7 @@ export interface ContextualOption {
 }
 
 export interface RecoveryOption {
-  id: "A" | "B";
+  id: string;
   title: string;
   description: string;
   affectedBookings: string[];
@@ -126,21 +130,53 @@ export interface DisruptionEvent {
   options: RecoveryOption[];
 }
 
-export type ScenarioId = "1" | "2" | "3" | "4" | "5";
-
-export type ScenarioTag = "GENERATIVE UI" | "CONTEXT" | "ADAPT" | "ORCHESTRATE" | "MEMORY";
-
-export interface ScenarioMeta {
-  id: ScenarioId;
-  number: string;
+/** A friend's stated input into a group trip — shown in the Group Curation persona. */
+export interface GroupMemberInput {
+  id: string;
   name: string;
-  category: "ENTRY" | "GUIDE" | "ADAPT" | "RECOVER" | "LEARN";
-  tag: ScenarioTag;
+  initial: string;
+  wants: string[];
+  budget: string;
+}
+
+/** A two-way vote used to reconcile group preferences into one decision. */
+export interface GroupVoteOption {
+  id: string;
+  title: string;
+  detail: string;
+  votes: number;
+  totalVoters: number;
+}
+
+export type PersonaId = "family" | "solo" | "group";
+
+export type Language = "hi" | "en";
+
+export interface PersonaMeta {
+  id: PersonaId;
+  name: string;
+  tagline: string;
+  description: string;
+  language: Language;
+  languageLabel: string;
+  samplePrompt: string;
+  icon: LucideIcon;
+}
+
+export type JourneyStage = "discovery" | "curation" | "booking" | "intrip";
+
+export interface JourneyStageMeta {
+  id: JourneyStage;
+  label: string;
 }
 
 export interface InspectorSnapshot {
+  /** Short, step-specific headline for the "why this matters" feed, e.g. "Natural language parsed into structured intent". */
+  capability: string;
+  /** Short, step-specific headline for the "agent backend" feed, e.g. "NLU: extracting duration, budget, visa & food constraints". */
+  backendAction: string;
   scenarioName: string;
-  scenarioTag: ScenarioTag;
+  scenarioTag: string;
   userState: string;
   contextUsed: string[];
   intent: string;

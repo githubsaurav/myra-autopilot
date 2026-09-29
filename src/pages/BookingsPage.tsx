@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
-import { Plane, Building2, Car, Ticket as TicketIcon } from "lucide-react";
+import { Plane, Building2, Car, Ticket as TicketIcon, Ship } from "lucide-react";
 import { Card } from "@/components/Card";
 import { Chip } from "@/components/Chip";
+import { EmptyPersonaNotice } from "@/components/shell/EmptyPersonaNotice";
+import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
 import type { Booking, BookingStatus, BookingType } from "@/types/demo";
 
@@ -10,6 +11,7 @@ const typeIcon: Record<BookingType, typeof Plane> = {
   hotel: Building2,
   transfer: Car,
   activity: TicketIcon,
+  ferry: Ship,
 };
 
 const statusTone: Record<BookingStatus, "neutral" | "navy" | "success" | "warning" | "red"> = {
@@ -40,19 +42,17 @@ function BookingRow({ booking }: { booking: Booking }) {
 }
 
 export default function BookingsPage() {
-  const { trip, ladakhTrip } = useDemoStore();
-  const navigate = useNavigate();
+  const { activePersonaId, trips } = useDemoStore();
+
+  if (!activePersonaId) {
+    return <EmptyPersonaNotice icon={TicketIcon} message="Pick a scenario to see its bookings here." />;
+  }
+
+  const trip = trips[activePersonaId];
+  const persona = personas.find((p) => p.id === activePersonaId)!;
 
   if (!trip) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
-        <TicketIcon size={22} className="text-[var(--color-slate)]" />
-        <p className="text-sm font-semibold text-[var(--color-ink)]">No bookings yet</p>
-        <button type="button" onClick={() => navigate("/myra")} className="rounded-lg bg-[var(--color-navy)] px-4 py-2 text-xs font-bold text-white">
-          Talk to Myra
-        </button>
-      </div>
-    );
+    return <EmptyPersonaNotice icon={TicketIcon} message={`${persona.name} isn't booked yet — keep chatting with Myra.`} />;
   }
 
   return (
@@ -67,19 +67,6 @@ export default function BookingsPage() {
           ))}
         </Card>
       </div>
-
-      {ladakhTrip && (
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-slate)]">
-            {ladakhTrip.destination} · Booking {ladakhTrip.bookingId}
-          </p>
-          <Card className="p-0">
-            {ladakhTrip.bookings.map((b) => (
-              <BookingRow key={b.id} booking={b} />
-            ))}
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

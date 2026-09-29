@@ -1,8 +1,10 @@
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, User } from "lucide-react";
 import { Card, SectionLabel } from "@/components/Card";
 import { Toggle } from "@/components/Toggle";
+import { EmptyPersonaNotice } from "@/components/shell/EmptyPersonaNotice";
 import { useDemoStore } from "@/state/useDemoStore";
 import { maskedIdentifiers, coTravellers } from "@/data/demoTraveller";
+import { personas } from "@/data/demoPersonas";
 import type { AutonomyMode } from "@/types/demo";
 
 const modes: { value: AutonomyMode; label: string; description: string }[] = [
@@ -14,7 +16,16 @@ const modes: { value: AutonomyMode; label: string; description: string }[] = [
 const alwaysAskFor = ["Flight rebooking", "Hotel changes above threshold", "Non-refundable changes", "Any health/safety decision"];
 
 export default function ProfilePage() {
-  const { traveller, updateTraveller, learnedPreferences } = useDemoStore();
+  const { activePersonaId, travellers, updateTraveller, learnedPreferences } = useDemoStore();
+
+  if (!activePersonaId) {
+    return <EmptyPersonaNotice icon={User} message="Pick a scenario to see that traveller's profile." />;
+  }
+
+  const traveller = travellers[activePersonaId];
+  const persona = personas.find((p) => p.id === activePersonaId)!;
+  const companions = coTravellers[activePersonaId];
+  const learned = learnedPreferences[activePersonaId];
 
   return (
     <div className="app-scroll h-full space-y-5 overflow-y-auto px-5 py-5">
@@ -25,23 +36,25 @@ export default function ProfilePage() {
           </span>
           <div>
             <p className="text-sm font-bold text-[var(--color-ink)]">{traveller.displayName}</p>
-            <p className="text-xs text-[var(--color-slate)]">{maskedIdentifiers.phone}</p>
+            <p className="text-xs text-[var(--color-slate)]">
+              {persona.name} · {maskedIdentifiers.phone}
+            </p>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5 text-xs text-[var(--color-slate)]">
           <span className="rounded-full bg-black/[0.05] px-2 py-1">Payment {maskedIdentifiers.paymentInstrument}</span>
-          <span className="rounded-full bg-black/[0.05] px-2 py-1">Travelling with {coTravellers.join(", ")}</span>
+          {companions.length > 0 && <span className="rounded-full bg-black/[0.05] px-2 py-1">Travelling with {companions.join(", ")}</span>}
         </div>
       </Card>
 
-      {learnedPreferences.length > 0 && (
+      {learned.length > 0 && (
         <Card className="border-[var(--color-navy)]/20 bg-[var(--color-navy-soft)]">
           <div className="mb-1 flex items-center gap-1.5">
             <Sparkles size={13} className="text-[var(--color-navy)]" />
             <SectionLabel>Remembered preferences</SectionLabel>
           </div>
           <ul className="space-y-1.5">
-            {learnedPreferences.map((p) => (
+            {learned.map((p) => (
               <li key={p} className="flex items-start gap-2 text-sm text-[var(--color-ink)]">
                 <Check size={14} className="mt-0.5 shrink-0 text-[var(--color-navy)]" /> {p}
               </li>
@@ -57,7 +70,7 @@ export default function ProfilePage() {
             <button
               key={m.value}
               type="button"
-              onClick={() => updateTraveller({ autonomyMode: m.value })}
+              onClick={() => updateTraveller(activePersonaId, { autonomyMode: m.value })}
               className={`flex w-full items-start justify-between gap-3 rounded-xl border p-3 text-left transition ${
                 traveller.autonomyMode === m.value ? "border-[var(--color-navy)] bg-[var(--color-navy-soft)]" : "border-[var(--color-border)] bg-[var(--color-surface)]"
               }`}
@@ -88,7 +101,7 @@ export default function ProfilePage() {
           max={5000}
           step={250}
           value={traveller.spendLimit}
-          onChange={(e) => updateTraveller({ spendLimit: Number(e.target.value) })}
+          onChange={(e) => updateTraveller(activePersonaId, { spendLimit: Number(e.target.value) })}
           className="mt-1.5 w-full accent-[var(--color-red)]"
         />
         <div className="mt-1 flex justify-between text-[10px] text-[var(--color-slate)]">
@@ -98,7 +111,7 @@ export default function ProfilePage() {
         <div className="mt-4 border-t border-[var(--color-border)] pt-3">
           <Toggle
             checked={traveller.refundableOnly}
-            onChange={(v) => updateTraveller({ refundableOnly: v })}
+            onChange={(v) => updateTraveller(activePersonaId, { refundableOnly: v })}
             label="Refundable-only actions"
             description="Only allow changes Myra can undo."
           />
@@ -106,7 +119,7 @@ export default function ProfilePage() {
         <div className="mt-1 border-t border-[var(--color-border)] pt-3">
           <Toggle
             checked={traveller.memoryEnabled}
-            onChange={(v) => updateTraveller({ memoryEnabled: v })}
+            onChange={(v) => updateTraveller(activePersonaId, { memoryEnabled: v })}
             label="Remember preferences across trips"
           />
         </div>

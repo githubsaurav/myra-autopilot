@@ -7,24 +7,26 @@ export function ExecutionTracker({
   onComplete,
   done,
   onViewChanges,
+  labels,
 }: {
   steps: string[];
   onComplete: () => void;
   done: boolean;
   onViewChanges: () => void;
+  labels?: { done?: string; viewChanges?: string };
 }) {
   return (
     <Card>
       {done ? (
         <div className="space-y-3 text-center">
           <CheckCircle2 size={28} className="mx-auto text-[var(--color-success)]" />
-          <p className="text-sm font-bold text-[var(--color-ink)]">Your trip is updated</p>
+          <p className="text-sm font-bold text-[var(--color-ink)]">{labels?.done ?? "Your trip is updated"}</p>
           <button
             type="button"
             onClick={onViewChanges}
             className="w-full rounded-lg bg-[var(--color-navy)] py-2.5 text-xs font-bold text-white"
           >
-            View changes in My Trips
+            {labels?.viewChanges ?? "View changes in My Trips"}
           </button>
         </div>
       ) : (

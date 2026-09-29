@@ -1,23 +1,22 @@
-import { useNavigate } from "react-router-dom";
 import { CalendarDays } from "lucide-react";
 import { Card, SectionLabel } from "@/components/Card";
 import { Chip } from "@/components/Chip";
+import { EmptyPersonaNotice } from "@/components/shell/EmptyPersonaNotice";
+import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
 
 export default function PlanPage() {
-  const { trip } = useDemoStore();
-  const navigate = useNavigate();
+  const { activePersonaId, trips } = useDemoStore();
+
+  if (!activePersonaId) {
+    return <EmptyPersonaNotice icon={CalendarDays} message="Pick a scenario to see its plan here." />;
+  }
+
+  const trip = trips[activePersonaId];
+  const persona = personas.find((p) => p.id === activePersonaId)!;
 
   if (!trip) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
-        <CalendarDays size={22} className="text-[var(--color-slate)]" />
-        <p className="text-sm font-semibold text-[var(--color-ink)]">Nothing planned yet</p>
-        <button type="button" onClick={() => navigate("/myra")} className="rounded-lg bg-[var(--color-navy)] px-4 py-2 text-xs font-bold text-white">
-          Talk to Myra
-        </button>
-      </div>
-    );
+    return <EmptyPersonaNotice icon={CalendarDays} message={`${persona.name} isn't booked yet — keep chatting with Myra.`} />;
   }
 
   const totalCost = trip.bookings.reduce((sum, b) => sum + b.amount, 0);
@@ -48,7 +47,7 @@ export default function PlanPage() {
         <div className="space-y-3">
           {days.map((day) => (
             <Card key={day} className="p-0">
-              <div className="border-b border-[var(--color-border)] px-4 py-2 text-xs font-bold text-[var(--color-navy)]">
+              <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-2 text-xs font-bold text-[var(--color-navy)]">
                 Day {day}
                 {day === trip.dayNumber && <Chip tone="navy">Today</Chip>}
               </div>

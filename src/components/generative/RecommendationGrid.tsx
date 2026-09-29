@@ -7,10 +7,12 @@ export function RecommendationGrid({
   options,
   onAdd,
   addedId,
+  addedLabel = "Added to tonight",
 }: {
   options: ContextualOption[];
   onAdd: (option: ContextualOption) => void;
   addedId: string | null;
+  addedLabel?: string;
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-3">
@@ -49,7 +51,7 @@ export function RecommendationGrid({
                   : "border border-[var(--color-border)] bg-white text-[var(--color-ink)]"
             }`}
           >
-            {addedId === o.id ? "Added to tonight" : "Add to Trip"}
+            {addedId === o.id ? addedLabel : "Add to Trip"}
           </button>
         </Card>
       ))}
