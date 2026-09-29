@@ -1,28 +1,23 @@
-import type { TravellerProfile } from "@/types/travel";
+import type { TravellerProfile } from "@/types/demo";
 
 /** Synthetic traveller — masked, never real PII. */
 export const defaultTraveller: TravellerProfile = {
   id: "traveller-aarav",
   displayName: "Aarav",
   travelPace: "balanced",
-  foodPreferences: [],
-  interests: [],
-  companionNeeds: [],
+  foodPreferences: ["Vegetarian"],
+  companionNeeds: ["Lower walking for parents"],
+  interests: ["Culture", "Food", "Nature"],
+  budgetPreference: "Value-conscious, modest convenience premium okay",
   autonomyMode: "approval",
   spendLimit: 2000,
   refundableOnly: true,
-  useLocation: true,
-  disruptionAlerts: true,
-  rememberPreferences: true,
-  escalateOnLowConfidence: true,
+  memoryEnabled: true,
 };
-
-export const coTravellers = ["Parent 1", "Parent 2"];
 
 export const maskedIdentifiers = {
   phone: "******4321",
-  bookingId: "MMT-DEMO-4821",
-  flightPnr: "DEMO7X",
-  hotelConfirmation: "HTL-DEMO-91",
   paymentInstrument: "•••• 4821",
 };
+
+export const coTravellers = ["Parent 1", "Parent 2"];

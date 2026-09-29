@@ -1,35 +1,44 @@
-import type { DisruptionEvent } from "@/types/travel";
+import type { DisruptionEvent } from "@/types/demo";
 
 export const typhoonDisruption: DisruptionEvent = {
   id: "disruption-typhoon",
-  headline: "Typhoon warning for tomorrow",
-  detail: "Your island activity is likely to be affected.",
-  dependencyChain: ["Island activity", "Transfer", "Hotel", "Day 6 plan", "Budget"],
+  headline: "Weather alert",
+  detail: "A typhoon warning may affect tomorrow's island activity.",
+  dependencyChain: [
+    { id: "dep-island", label: "Island activity", affected: true },
+    { id: "dep-hotel", label: "Hotel", affected: true },
+    { id: "dep-transfer", label: "Transfer", affected: true },
+    { id: "dep-day6", label: "Day 6 plan", affected: true },
+    { id: "dep-budget", label: "Budget", affected: true },
+    { id: "dep-companions", label: "Companions", affected: false },
+  ],
   options: [
     {
       id: "A",
-      title: "Move island experience to Day 6 → Day 6 extended stay",
-      description: "Move the island experience by extending the trip one day.",
+      title: "Move island activity to Day 6",
+      description: "Extend the hotel by one night and shift the airport transfer by 3 hours.",
       affectedBookings: ["bk-island", "bk-hotel", "bk-transfer"],
       extraCost: 1200,
       refundImpact: 0,
-      rationale: "Preserves the experience you wanted and fits your parents' preferred pace.",
+      timeImpact: "Transfer shifts by 3 hours",
       changeCount: 3,
       walking: "low",
       preservesOriginal: true,
+      rationale: "Preserves the activity you wanted while keeping disruption low for your parents.",
       recommended: true,
     },
     {
       id: "B",
       title: "Replace with indoor local experience",
-      description: "Swap the island tour for a food + heritage experience, no schedule changes.",
+      description: "Swap the island tour for a food + heritage activity. No hotel or transfer change.",
       affectedBookings: ["bk-island"],
       extraCost: 650,
       refundImpact: 0,
-      rationale: "Fastest to resolve with no hotel or transfer disruption.",
+      timeImpact: "No schedule change",
       changeCount: 1,
       walking: "low",
       preservesOriginal: false,
+      rationale: "Fastest to resolve, but the original island activity is cancelled.",
     },
   ],
 };

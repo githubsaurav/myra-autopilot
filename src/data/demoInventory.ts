@@ -1,95 +1,72 @@
-export interface FreeTimeOption {
-  id: string;
-  title: string;
-  distanceMin: number;
-  durationHrs: number;
-  walking: "low" | "moderate" | "high";
-  vegetarian: boolean;
-  cost: number;
-  availableNow: boolean;
-  why: string;
-}
+import type { ContextualOption, DestinationOption } from "@/types/demo";
 
-export const freeTimeOptions: FreeTimeOption[] = [
+export const destinationOptions: DestinationOption[] = [
   {
-    id: "ft-1",
+    id: "dest-vietnam",
+    name: "Vietnam",
+    estCost: 132000,
+    visa: "Easy e-visa",
+    foodFit: "Vegetarian-friendly",
+    weatherFit: "Good October fit",
+    flightDuration: "Moderate",
+    parentFriendly: "High",
+    reason: "Best balance of budget, visa simplicity, food fit and relaxed multi-city travel.",
+    recommended: true,
+  },
+  {
+    id: "dest-thailand",
+    name: "Thailand",
+    estCost: 142000,
+    visa: "Easy entry",
+    foodFit: "Strong food + experience options",
+    weatherFit: "Warm, occasional rain",
+    flightDuration: "Moderate",
+    parentFriendly: "High",
+    reason: "Strong experience density but slightly over budget.",
+  },
+  {
+    id: "dest-srilanka",
+    name: "Sri Lanka",
+    estCost: 118000,
+    visa: "Visa on arrival",
+    foodFit: "Vegetarian options available",
+    weatherFit: "Favourable in October",
+    flightDuration: "Short",
+    parentFriendly: "High",
+    reason: "Shortest flight and a slower trip is possible, but fewer marquee experiences.",
+  },
+];
+
+export const freeTimeOptions: ContextualOption[] = [
+  {
+    id: "ft-heritage",
     title: "Heritage Walk + Vegetarian Dinner",
     distanceMin: 12,
     durationHrs: 2.5,
     walking: "low",
-    vegetarian: true,
     cost: 1800,
     availableNow: true,
-    why: "Fits your free time, your parents' pace, and your food preference.",
+    why: "Best balance of low effort, local experience and food fit.",
+    recommended: true,
   },
   {
-    id: "ft-2",
-    title: "Riverside Evening Cruise",
+    id: "ft-riverside",
+    title: "Riverside Evening",
     distanceMin: 18,
     durationHrs: 3,
-    walking: "moderate",
-    vegetarian: false,
+    walking: "medium",
     cost: 1250,
     availableNow: true,
-    why: "Scenic and relaxed, though a bit more walking than usual.",
+    why: "Scenic and relaxed, though more walking than usual.",
   },
   {
-    id: "ft-3",
+    id: "ft-indoor",
     title: "Indoor Food Experience",
     distanceMin: 10,
     durationHrs: 2,
     walking: "low",
-    vegetarian: true,
     cost: 1500,
     availableNow: true,
-    why: "Minimal walking and vegetarian-friendly — good for a lighter evening.",
-  },
-];
-
-export interface RestaurantOption {
-  id: string;
-  name: string;
-  walkMin: number;
-  cabMin: number;
-  vegetarianConfidence: "high" | "medium";
-  price: string;
-  open: boolean;
-  rating: number;
-  why: string;
-}
-
-export const restaurantOptions: RestaurantOption[] = [
-  {
-    id: "rest-1",
-    name: "Lá Việt Vegetarian Kitchen",
-    walkMin: 6,
-    cabMin: 3,
-    vegetarianConfidence: "high",
-    price: "₹₹",
-    open: true,
-    rating: 4.6,
-    why: "Fully vegetarian menu, minimal walking, open now.",
-  },
-  {
-    id: "rest-2",
-    name: "Song Han Riverside Grill",
-    walkMin: 15,
-    cabMin: 6,
-    vegetarianConfidence: "medium",
-    price: "₹₹₹",
-    open: true,
-    rating: 4.4,
-    why: "Vegetarian options available, slightly more walking.",
-  },
-  {
-    id: "rest-3",
-    name: "Bếp Nhà Home Kitchen",
-    walkMin: 4,
-    cabMin: 2,
-    vegetarianConfidence: "high",
-    price: "₹",
-    open: true,
-    rating: 4.3,
-    why: "Closest option, budget-friendly, vegetarian confident.",
+    why: "Minimal walking, vegetarian-friendly, good for a lighter evening.",
   },
 ];
