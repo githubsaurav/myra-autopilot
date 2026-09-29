@@ -127,7 +127,7 @@ export default function PersonaSolo() {
               facts={intentFacts}
               onLooksRight={handleLooksRight}
               confirmed={step >= 2}
-              labels={{ title: "समझी गई जानकारी", looksRight: "ठीक है", edit: "बदलें", confirmed: "पुष्टि हो गई" }}
+              labels={{ title: "समझी गई जानकारी", looksRight: "ठीक है", edit: "बदलें", confirmed: "पुष्टि हो गई", save: "बदलाव सहेजें", cancel: "रद्द करें" }}
             />
           </GeneratedUIContainer>
         )}
