@@ -1,10 +1,13 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { personas } from "@/data/demoPersonas";
 import { Sparkles, Bot } from "lucide-react";
 import { useDemoStore } from "@/state/useDemoStore";
 
 export function WhyThisMattersPanel() {
-  const { activePersonaId, inspectorHistory } = useDemoStore();
+  const { activePersonaId, inspectorHistory, setActivePersona } = useDemoStore();
+  const navigate = useNavigate();
   const history = activePersonaId ? inspectorHistory[activePersonaId] : [];
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -13,8 +16,8 @@ export function WhyThisMattersPanel() {
   }, [history.length]);
 
   return (
-    <aside className="hidden h-full w-[260px] shrink-0 flex-col lg:flex">
-      <div className="my-6 ml-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
+    <aside className="hidden h-full w-[240px] shrink-0 flex-col lg:flex">
+      <div className="my-4 ml-4 mr-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
         <div className="flex items-center gap-1.5 border-b border-[var(--color-border)] px-4 py-3.5">
           <Bot size={14} className="text-[var(--color-red)]" />
           <div>
@@ -23,9 +26,11 @@ export function WhyThisMattersPanel() {
           </div>
         </div>
 
+        <div className="scenario-switcher"><p className="eyebrow">EXPLORE A JOURNEY</p>{personas.map((p) => { const Icon = p.icon; return <button key={p.id} aria-pressed={activePersonaId === p.id} className={activePersonaId === p.id ? "scenario-link selected" : "scenario-link"} onClick={() => { setActivePersona(p.id); navigate("/myra"); }}><Icon size={17} /><span><strong>{p.name}</strong><small>{p.languageLabel} · Interactive journey</small></span></button>; })}</div>
+        <p className="panel-section-label">CAPABILITIES IN ACTION</p>
         {history.length === 0 ? (
           <p className="px-4 py-5 text-xs leading-relaxed text-[var(--color-slate)]">
-            Pick a scenario — each new capability Myra demonstrates will show up here as it happens.
+            Choose a journey above. As you explore, see the capabilities behind each moment.
           </p>
         ) : (
           <div ref={scrollRef} className="app-scroll min-h-0 flex-1 space-y-2.5 overflow-y-auto p-3">

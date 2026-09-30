@@ -34,23 +34,23 @@ export function AgentBackendPanel() {
 
   return (
     <aside className="hidden h-full w-[300px] shrink-0 flex-col xl:flex">
-      <div className="my-6 mr-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
+      <div className="my-4 mr-4 ml-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
         <div className="border-b border-[var(--color-border)] px-4 py-3.5">
           <div className="flex items-center gap-1.5">
             <Radar size={14} className="text-[var(--color-navy)]" />
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--color-navy)]">Agent backend</p>
-              <p className="text-[10px] font-semibold text-[var(--color-slate)]">Steps taken so far</p>
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--color-navy)]">Behind the journey</p>
+              <p className="text-[10px] font-semibold text-[var(--color-slate)]">How Myra connects the dots</p>
             </div>
           </div>
           <p className="mt-2 text-[10px] font-semibold text-[var(--color-slate)]">
-            Powered by OpenAI · Google Cloud · Mastercard
+            Concept architecture · Simulated actions
           </p>
         </div>
 
         {history.length === 0 ? (
           <p className="px-4 py-5 text-xs leading-relaxed text-[var(--color-slate)]">
-            Every step the agent takes to fulfil the request — and which partner technology powers it — will appear here as it happens.
+            Your trip, working together. Start a conversation to follow the context, decisions, and trip updates behind each response.
           </p>
         ) : (
           <>

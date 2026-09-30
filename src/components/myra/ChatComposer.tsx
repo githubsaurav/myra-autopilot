@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Mic, Send } from "lucide-react";
+import { Send } from "lucide-react";
 
 export function ChatComposer({
   prefill,
@@ -22,16 +22,9 @@ export function ChatComposer({
   }
 
   return (
-    <div className="flex items-end gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-      <button
-        type="button"
-        disabled={disabled}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-slate)] hover:bg-black/5 disabled:opacity-40"
-        aria-label="Voice input (visual only)"
-      >
-        <Mic size={16} />
-      </button>
+    <div className="chat-composer flex items-end gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
       <textarea
+        aria-label="Message Myra"
         value={value}
         disabled={disabled}
         onChange={(e) => setValue(e.target.value)}

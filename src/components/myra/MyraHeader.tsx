@@ -12,7 +12,7 @@ export function MyraHeader({
   onChangePersona?: (id: PersonaId) => void;
 }) {
   return (
-    <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3.5">
+    <div className="myra-header border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3.5">
       <div className="flex items-center gap-2.5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-red-soft)] text-[var(--color-red)]">
           <Sparkles size={15} />
@@ -22,7 +22,7 @@ export function MyraHeader({
           <p className="truncate text-xs text-[var(--color-slate)]">{tripLabel ?? "Your AI travel companion"}</p>
         </div>
         <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-success-soft)] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--color-success)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" /> Live
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" /> Ready
         </span>
       </div>
       {persona && onChangePersona && (

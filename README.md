@@ -23,68 +23,46 @@ npm install
 npm run dev
 ```
 
-## The demo shell
+## Experience and design
 
-A three-column desktop presentation shell:
+The entry page introduces Myra with an original, locally stored Vietnam illustration
+and three interactive trip cards. Each card opens its existing scripted journey.
+The red action colour, blue navigation, MakeMyTrip logo, and persistent trip tabs
+carry through to the conversation workspace.
 
-- **Scenario Library** (left, `lg:` and up) — pick any of the 5 scripted
-  scenarios, or run **Play Hero Flow** to step through all of them in
-  order with a "Next Demo Moment" control. Includes **Reset Demo**.
-- **MakeMyTrip product** (centre) — the actual consumer surface, with
-  bottom tabs **Trip / Plan / Myra / Bookings / Profile**. This is what
-  an evaluator should imagine as the real future product.
-- **Autopilot Inspector** (right, `xl:` and up) — a live, per-step
-  explanation of what Myra is doing: user state, context used, intent,
-  generated UI, action, state change, and value demonstrated. Presenter
-  aid only, not part of the consumer product.
+- **Family trip** — planning with parents, destination selection, booking approval,
+  and in-trip disruption recovery.
+- **Solo trip** — Hindi conversation with offbeat destination recommendations and
+  hyper-local curation.
+- **Group trip** — shared preferences, stay voting, booking, and group coordination.
 
-On narrower widths, only the centre MakeMyTrip product is shown.
+Desktop includes a journey switcher and capability history on the left, the
+customer app in the centre, and simulated orchestration details on the right.
+On mobile, the trip selector and Insights button provide access to the same context.
+Trip, Plan, Myra, Bookings, and Profile remain connected to the shared demo state.
 
-## The 5 scripted scenarios
+### Validation
 
-Each scenario has a pre-filled chat message, a deterministic scripted
-response, at least one Generative UI component, and — where relevant — a
-mutation to the shared trip state that's visible in the normal MMT tabs.
+```bash
+npm run build
+npm run lint
+```
 
-1. **Plan with natural language** (`ENTRY`) — messy Hinglish intent →
-   Intent Summary Card → Destination Recommendation Grid → creates the
-   Vietnam trip.
-2. **Four free hours** (`GUIDE`) — in-trip contextual discovery →
-   Recommendation Grid → adds items to today's itinerary.
-3. **Make today lighter** (`ADAPT`) — Before/After Adaptation View →
-   re-sequences Day 3 → Memory Learned Card.
-4. **Typhoon recovery** (`RECOVER`, the hero scenario) — proactive alert →
-   Dependency Graph → Recovery Options → Comparison Matrix → Approval
-   Sheet → Execution Tracker → updates 3 bookings + itinerary.
-5. **Next trip starts smarter** (`LEARN`) — Memory Applied Card reuses
-   preferences learned from Vietnam to start a Ladakh trip.
-
-Scenario 1 must run before 2–4 (they continue an active trip); running
-Scenario 3 before 5 adds an extra learned preference to Scenario 5's
-memory card, but 5 also has its own baseline of learned preferences so it
-works standalone.
+The design refresh was checked in-browser at desktop and mobile widths, including
+journey switching and advancing the group stay vote. The existing store has one
+non-blocking Fast Refresh lint warning.
 
 ## Code structure
 
-```
-src/
-  components/
-    shell/        DemoShell, ScenarioLibrary, AutopilotInspector, MakeMyTripAppShell
-    myra/          MyraHeader, ConversationThread, ChatComposer, GeneratedUIContainer, useThinking
-    generative/    IntentSummaryCard, DestinationGrid, RecommendationGrid, BeforeAfterPlan,
-                   DependencyGraph, RecoveryOptions, ComparisonMatrix, ApprovalSheet,
-                   ExecutionTracker, MemoryCard
-    Card, Chip, Toggle, MyraBubble, StatusStepper, DestinationHero, Toast — shared primitives
-  pages/           TripPage, PlanPage, MyraWorkspacePage, BookingsPage, ProfilePage (the 5 MMT tabs)
-  scenarios/       Scenario1Entry … Scenario5Learning — one scripted controller per scenario
-  data/            synthetic traveller, trip, inventory, disruption, scenario metadata
-  state/
-    useDemoStore.tsx      the one source of truth: trip, traveller, learned preferences,
-                          active scenario, hero-flow state — persisted to localStorage
-    InspectorContext.tsx  lets the active scenario push its current step's explanation
-                          to the Autopilot Inspector panel
-  types/demo.ts    shared domain types
-```
+- `src/pages/` — landing page and the five product tabs.
+- `src/components/shell/` — persistent navigation, journey controls, and demo panels.
+- `src/components/myra/` — chat header, composer, and conversation container.
+- `src/components/generative/` — interactive recommendation, voting, approval,
+  recovery, and execution cards.
+- `src/scenarios/` — family, solo, and group scripted controllers.
+- `src/state/useDemoStore.tsx` — shared trip state persisted in localStorage.
+- `src/index.css` — theme, responsive entry layout, and workspace styling.
+- `public/travel-landscape.svg` — original local illustration; no remote image dependency.
 
 ## Deploy to Vercel
 

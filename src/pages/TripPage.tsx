@@ -45,9 +45,9 @@ export default function TripPage() {
   return (
     <div className="app-scroll h-full overflow-y-auto px-5 py-5">
       <div className="space-y-5">
-        <DestinationHero title="Your Trips" subtitle="One account, three trip folders">
+        <DestinationHero title="Good trips start here." subtitle="YOUR TRAVEL, ALL TOGETHER">
           <p className="mt-2 text-xs text-white/80">
-            Same traveller, same Myra — the assistant that shows up is shaped by which trip you open.
+            A family escape, a solo discovery, a long-awaited reunion. Myra keeps every detail together.
           </p>
         </DestinationHero>
 

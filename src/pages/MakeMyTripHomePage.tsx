@@ -1,77 +1,45 @@
-import { useNavigate } from "react-router-dom";
-import { Plane, Building2, Home as HomeIcon, TrainFront, Bus, Package, Sparkles, ArrowRight, ShieldCheck, Headset, BadgePercent } from "lucide-react";
-import { TopNav } from "@/components/shell/TopNav";
-
-const categories = [
-  { icon: Plane, label: "Flights" },
-  { icon: Building2, label: "Hotels" },
-  { icon: HomeIcon, label: "Homestays" },
-  { icon: TrainFront, label: "Trains" },
-  { icon: Bus, label: "Buses" },
-  { icon: Package, label: "Holidays" },
-];
-
-const trustBadges = [
-  { icon: ShieldCheck, label: "Secure payments" },
-  { icon: BadgePercent, label: "Best price guarantee" },
-  { icon: Headset, label: "24x7 support" },
-];
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowUpRight, ArrowRight, Sparkles, Check, Compass, ShieldCheck, HeartHandshake } from "lucide-react";
+import { personas } from "@/data/demoPersonas";
+import { useDemoStore } from "@/state/useDemoStore";
 
 export default function MakeMyTripHomePage() {
   const navigate = useNavigate();
-
+  const { setActivePersona } = useDemoStore();
   return (
-    <div className="min-h-dvh bg-[var(--color-bg)]">
-      <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3">
-        <div className="flex items-center gap-3">
-          <img src="/makemytrip-logo.svg" alt="MakeMyTrip" className="h-6 w-auto" />
-          <TopNav />
-        </div>
-        <nav className="flex items-center gap-5 text-xs font-semibold text-[var(--color-slate)]">
-          <span>My Trips</span>
-          <span className="hidden sm:inline">Support</span>
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-navy-soft)] text-[var(--color-navy)]">A</span>
-        </nav>
+    <div className="landing">
+      <header className="landing-nav">
+        <Link to="/" aria-label="MakeMyTrip home"><img src="/makemytrip-logo.svg" alt="MakeMyTrip" /></Link>
+        <span className="landing-nav-label">A little more trip. A lot less planning.</span>
+        <Link to="/trip" className="nav-trip">My trips <ArrowUpRight size={15} /></Link>
       </header>
-
-      <main className="mx-auto max-w-[880px] px-5 py-6">
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-          {categories.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex cursor-default flex-col items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-3">
-              <Icon size={18} className="text-[var(--color-navy)]" />
-              <span className="text-[11px] font-semibold text-[var(--color-ink)]">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => navigate("/trip")}
-          className="group relative mt-6 flex w-full items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-navy)] via-[#124a8c] to-[#1e6bb8] px-6 py-8 text-left shadow-[var(--shadow-pop)] transition hover:opacity-95 sm:px-10 sm:py-10"
-        >
-          <div className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-white/10" />
-          <div className="pointer-events-none absolute -bottom-16 left-16 h-28 w-28 rounded-full bg-white/10" />
-          <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-red)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-              <Sparkles size={11} /> New
-            </span>
-            <p className="mt-3 text-2xl font-black tracking-tight text-white sm:text-4xl">Myra Autopilot</p>
-            <p className="mt-2 max-w-md text-xs text-white/80 sm:text-sm">
-              Your AI travel companion — plan smarter, and let Myra stay with your trip from planning to the moment it happens.
-            </p>
+      <main>
+        <section className="landing-hero">
+          <div className="landing-copy">
+            <span className="eyebrow"><span className="status-dot" /> INTRODUCING MYRA AUTOPILOT</span>
+            <h1>You make<br />the memories.<br /><em>Myra makes<br className="desktop-break" /> it happen.</em></h1>
+            <p>Your plans, your people, your kind of travel. Meet the companion that connects every detail—and stays with you when plans change.</p>
+            <Link to="/myra" className="primary-cta">Meet your travel companion <ArrowRight size={18} /></Link>
+            <div className="hero-note"><ShieldCheck size={15} /> Your preferences. Your approval. Always.</div>
           </div>
-          <ArrowRight size={28} className="relative shrink-0 text-white transition group-hover:translate-x-1" />
-        </button>
-
-        <div className="mt-8 grid grid-cols-3 gap-3">
-          {trustBadges.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-4 text-center">
-              <Icon size={16} className="text-[var(--color-slate)]" />
-              <span className="text-[10px] font-semibold text-[var(--color-slate)]">{label}</span>
-            </div>
-          ))}
-        </div>
+          <div className="landing-art">
+            <img src="/travel-landscape.svg" alt="Illustration of a sailboat among the limestone islands of Vietnam" />
+            <div className="destination-caption"><span>LESS PLANNING. MORE BEING HERE.</span><strong>Somewhere you’ll remember.</strong></div>
+            <div className="floating-message"><span className="myra-avatar"><Sparkles size={19} /></span><div><strong>A little change of plans? I’m on it.</strong><p>Weather shifted. Your trip doesn’t have to.</p><span><Check size={12} /> A backup plan, ready for your approval</span></div></div>
+            <span className="art-coordinate">VIETNAM · 20.9101° N, 107.1839° E</span>
+          </div>
+        </section>
+        <section className="journey-section">
+          <div className="section-heading"><div><span className="eyebrow">ONE COMPANION. EVERY KIND OF TRIP.</span><h2>Where shall we begin?</h2></div><span className="demo-tag">Interactive concept · Sample trips</span></div>
+          <div className="journey-cards">{personas.map((persona, i) => {
+            const Icon = persona.icon;
+            const descriptions = ["A slower pace. Vegetarian finds. Every detail taken care of, together.", "Follow your curiosity. Find the places that never make the usual lists.", "Different budgets. Different wish lists. One trip everyone can get behind."];
+            return <button className={`journey-card journey-${persona.id}`} key={persona.id} onClick={() => { setActivePersona(persona.id); navigate("/myra"); }}><div className="journey-card-top"><span className="journey-icon"><Icon size={21} /></span><span>0{i + 1}</span></div><h3>{persona.name === "Family Trip" ? "Bring your favourite people." : persona.name === "Solo Trip" ? "Take the road less travelled." : "Get the whole group on board."}</h3><p>{descriptions[i]}</p><div className="journey-card-bottom"><span>{persona.name} · {persona.languageLabel}</span><ArrowUpRight size={20} /></div></button>;
+          })}</div>
+        </section>
+        <section className="promise-row"><div><Compass size={20} /><span><strong>Knows your kind of travel</strong><small>Built around what matters to you.</small></span></div><div><Sparkles size={20} /><span><strong>Connects the whole trip</strong><small>From the first idea to the way home.</small></span></div><div><HeartHandshake size={20} /><span><strong>Keeps you in control</strong><small>You approve the important decisions.</small></span></div></section>
       </main>
+      <footer className="landing-footer"><span>MakeMyTrip × Myra Autopilot</span><span>Case competition prototype · Simulated bookings & responses</span></footer>
     </div>
   );
 }

@@ -22,13 +22,13 @@ export default function MyraWorkspacePage() {
     return (
       <div className="flex h-full flex-col">
         <MyraHeader />
-        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center">
+        <div className="app-scroll flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto px-6 py-8 text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-red-soft)] text-[var(--color-red)]">
             <Sparkles size={20} />
           </span>
           <div>
-            <p className="text-sm font-bold text-[var(--color-ink)]">Pick a trip to continue</p>
-            <p className="mt-1 text-xs text-[var(--color-slate)]">Same account, three trip folders — Myra activates with that trip's context, and your trip/bookings/profile switch with it.</p>
+            <p className="text-sm font-bold text-[var(--color-ink)]">Every great trip starts with a conversation.</p>
+            <p className="mt-1 text-xs text-[var(--color-slate)]">Choose a trip below. I’ll bring the ideas, keep track of the details, and help you make it yours.</p>
           </div>
           <PersonaSelector value={null} onChange={setActivePersona} />
           <div className="w-full space-y-2 pt-2">

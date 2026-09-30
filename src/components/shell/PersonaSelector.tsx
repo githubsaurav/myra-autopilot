@@ -23,6 +23,7 @@ export function PersonaSelector({
           </span>
         )}
         <select
+          aria-label="Choose a trip journey"
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value as PersonaId)}
           className={`appearance-none rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] py-1.5 ${ActiveIcon ? "pl-7" : "pl-3"} pr-7 text-xs font-bold text-[var(--color-navy)] outline-none`}
@@ -47,6 +48,7 @@ export function PersonaSelector({
         </span>
       )}
       <select
+          aria-label="Choose a trip journey"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value as PersonaId)}
         className={`appearance-none rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] py-2 ${ActiveIcon ? "pl-8" : "pl-3"} pr-8 text-xs font-bold text-[var(--color-ink)] outline-none focus:border-[var(--color-navy)]`}

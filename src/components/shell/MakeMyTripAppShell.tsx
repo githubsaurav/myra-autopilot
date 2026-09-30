@@ -18,7 +18,7 @@ export function MakeMyTripAppShell() {
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-[var(--color-bg)]">
-      <header className="relative flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2.5">
+      <header className="product-topbar relative flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2.5">
         <div className="flex items-center gap-3">
           <Link to="/" title="Back to MakeMyTrip home">
             <img src="/makemytrip-logo.svg" alt="MakeMyTrip" className="h-6 w-auto" />
@@ -58,7 +58,7 @@ export function MakeMyTripAppShell() {
             title="See what Myra is doing behind the scenes"
           >
             <Radar size={13} />
-            Agent Insights
+            Insights
           </button>
           <button
             type="button"
@@ -77,7 +77,7 @@ export function MakeMyTripAppShell() {
         <Outlet />
       </div>
 
-      <nav className="grid shrink-0 grid-cols-5 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+      <nav aria-label="Trip navigation" className="product-tabs grid shrink-0 grid-cols-5 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
         {tabs.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
