@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MyraBubble } from "@/components/MyraBubble";
 import { ConversationThread } from "@/components/myra/ConversationThread";
 import { ChatComposer } from "@/components/myra/ChatComposer";
+import { ScenarioQuickActions } from "@/components/myra/ScenarioQuickActions";
 import { GeneratedUIContainer, ThinkingBubble } from "@/components/myra/GeneratedUIContainer";
 import { useThinking } from "@/components/myra/useThinking";
 import { IntentSummaryCard } from "@/components/generative/IntentSummaryCard";
@@ -10,6 +11,7 @@ import { DestinationGrid } from "@/components/generative/DestinationGrid";
 import { DependencyGraph } from "@/components/generative/DependencyGraph";
 import { RecommendationGrid } from "@/components/generative/RecommendationGrid";
 import { TripCreatedCelebration } from "@/components/generative/TripCreatedCelebration";
+import { BookingConsentSheet } from "@/components/generative/BookingConsentSheet";
 import { Card, SectionLabel } from "@/components/Card";
 import { destinationOptions, soloDependencyByDestination, soloHyperLocalOptionsByDestination } from "@/data/demoInventory";
 import { personas } from "@/data/demoPersonas";
@@ -17,6 +19,10 @@ import { useDemoStore } from "@/state/useDemoStore";
 import type { ContextualOption } from "@/types/demo";
 
 const persona = personas.find((p) => p.id === "solo")!;
+const MID_PROMPT = "तो आज सुबह क्या कर सकते हैं?";
+const FREEFORM_ACK = "समझ गई — मैं इसे ध्यान में रखूंगी।";
+const ESCALATE_USER_TEXT = "क्या आपकी टीम से कोई सीधे मदद कर सकता है?";
+const ESCALATE_REPLY = "मैंने इसे एक ह्यूमन ट्रैवल एक्सपर्ट के पास भेज दिया है — वे कुछ ही मिनटों में यहां जुड़ेंगे। तब तक मैं समन्वय जारी रखूंगी।";
 
 const intentFacts = [
   { label: "यात्री", value: "अकेले" },
@@ -28,10 +34,15 @@ const intentFacts = [
 ];
 
 export default function PersonaSolo() {
-  const { personaStep, setPersonaStep, setPersonaStage, trip, createTrip, addLearnedPreference, addInspectorEntry } = useDemoStoreShim();
+  const { personaStep, setPersonaStep, setPersonaStage, trip, createTrip, addLearnedPreference, addInspectorEntry, resetPersona } = useDemoStoreShim();
   const step = personaStep;
   const [exploredId, setExploredId] = useState<string | null>(null);
   const [added, setAdded] = useState<ContextualOption | null>(null);
+  const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
+  const [sentMid, setSentMid] = useState(MID_PROMPT);
+  const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
+  const [paymentApproved, setPaymentApproved] = useState(false);
   const { isThinking, runWithThinking } = useThinking();
   const navigate = useNavigate();
 
@@ -90,21 +101,23 @@ export default function PersonaSolo() {
     setPersonaStep("solo", next);
   }
 
-  function handleSend() {
-    runWithThinking(() => goto(1));
-  }
-
   function handleLooksRight() {
     runWithThinking(() => goto(2));
   }
 
   function handleExplore(id: string) {
     setExploredId(id);
+    setAwaitingPayment(false);
     goto(3);
   }
 
-  function handleCreateTrip() {
+  function handleRequestPayment() {
+    setAwaitingPayment(true);
+  }
+
+  function handleApprovePayment() {
     if (!explored) return;
+    setPaymentApproved(true);
     createTrip("solo", explored);
     addLearnedPreference("solo", "Prefers offbeat, low-crowd destinations over popular circuits");
     goto(4);
@@ -115,10 +128,52 @@ export default function PersonaSolo() {
     goto(7);
   }
 
+  function handleComposerSend(text: string) {
+    if (step === 0) {
+      setSentIntent(text);
+      runWithThinking(() => goto(1));
+    } else if (step === 5) {
+      setSentMid(text);
+      runWithThinking(() => goto(6));
+    } else {
+      const atStep = step;
+      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]));
+    }
+  }
+
+  function handleRestart() {
+    resetPersona("solo");
+    setExploredId(null);
+    setAdded(null);
+    setSentIntent(persona.samplePrompt);
+    setSentMid(MID_PROMPT);
+    setNotes([]);
+    setAwaitingPayment(false);
+    setPaymentApproved(false);
+  }
+
+  function handleEscalate() {
+    const atStep = step;
+    runWithThinking(() => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]));
+  }
+
+  function notesAt(atStep: number) {
+    return notes
+      .filter((n) => n.atStep === atStep)
+      .map((n, i) => (
+        <Fragment key={`note-${atStep}-${i}`}>
+          <MyraBubble from="user">{n.user}</MyraBubble>
+          <MyraBubble>{n.reply}</MyraBubble>
+        </Fragment>
+      ));
+  }
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <ConversationThread>
-        {step >= 1 && <MyraBubble from="user">{persona.samplePrompt}</MyraBubble>}
+        {notesAt(0)}
+
+        {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && <MyraBubble>समझ गई — मैं दूर, कम भीड़ वाली और असली लोकल कल्चर वाली जगहें ढूंढ रही हूं, टूरिस्ट लिस्ट नहीं।</MyraBubble>}
 
         {step >= 1 && (
@@ -132,6 +187,8 @@ export default function PersonaSolo() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(1)}
+
         {step >= 2 && <MyraBubble>ये तीन जगहें फिट बैठती हैं — कोई भी चुनकर पूरा प्लान देखें।</MyraBubble>}
 
         {step >= 2 && (
@@ -140,7 +197,9 @@ export default function PersonaSolo() {
           </GeneratedUIContainer>
         )}
 
-        {step >= 3 && explored && (
+        {notesAt(2)}
+
+        {step >= 3 && explored && !awaitingPayment && (
           <GeneratedUIContainer>
             <Card>
               <SectionLabel>{explored.name} · 5 दिन का प्लान</SectionLabel>
@@ -157,7 +216,7 @@ export default function PersonaSolo() {
               </div>
               <button
                 type="button"
-                onClick={handleCreateTrip}
+                onClick={handleRequestPayment}
                 disabled={step >= 4}
                 className="mt-3 w-full rounded-lg bg-[var(--color-red)] py-2.5 text-xs font-bold text-white disabled:opacity-60"
               >
@@ -166,6 +225,30 @@ export default function PersonaSolo() {
             </Card>
           </GeneratedUIContainer>
         )}
+
+        {step === 3 && explored && awaitingPayment && (
+          <GeneratedUIContainer>
+            <BookingConsentSheet
+              destinationName={explored.name}
+              amount={explored.estCost}
+              onApprove={handleApprovePayment}
+              onCancel={() => setAwaitingPayment(false)}
+              approved={paymentApproved}
+              labels={{
+                title: "पुष्टि करें और भुगतान करें",
+                amountLabel: "कुल राशि",
+                paymentMethod: "भुगतान का तरीका",
+                guardrail1: "सिर्फ आपकी मंज़ूरी के बाद चार्ज होगा",
+                guardrail2: "एयरलाइन/होटल पॉलिसी के अनुसार रिफंडेबल",
+                approve: `भुगतान करें ₹${explored.estCost.toLocaleString("en-IN")}`,
+                cancel: "रद्द करें",
+                approved: "भुगतान स्वीकृत",
+              }}
+            />
+          </GeneratedUIContainer>
+        )}
+
+        {notesAt(3)}
 
         {step >= 4 && (
           <>
@@ -187,6 +270,8 @@ export default function PersonaSolo() {
           </>
         )}
 
+        {notesAt(4)}
+
         {step >= 5 && <MyraBubble>सुप्रभात। आज सुबह लोकल कंडीशन बदल गई है, तो आपका प्लान थोड़ा खुला है।</MyraBubble>}
 
         {step >= 5 && dependency && (
@@ -197,7 +282,7 @@ export default function PersonaSolo() {
 
         {step >= 5 && <MyraBubble>मैंने चेक किया कि आइलैंड पर आज सुबह असल में क्या मुमकिन है — सिर्फ आम टूरिस्ट सुझाव नहीं।</MyraBubble>}
 
-        {step >= 6 && <MyraBubble from="user">तो आज सुबह क्या कर सकते हैं?</MyraBubble>}
+        {step >= 6 && <MyraBubble from="user">{sentMid}</MyraBubble>}
         {step >= 6 && <MyraBubble>अभी तीन चीज़ें आपके लिए खुली हैं — ये बहुत हद तक सिर्फ आज के लिए हैं।</MyraBubble>}
 
         {step >= 6 && (
@@ -205,6 +290,8 @@ export default function PersonaSolo() {
             <RecommendationGrid options={hyperLocalOptions} onAdd={handleAdd} addedId={added?.id ?? null} addedLabel="आज के प्लान में जोड़ा गया" />
           </GeneratedUIContainer>
         )}
+
+        {notesAt(6)}
 
         {step >= 7 && added && (
           <GeneratedUIContainer>
@@ -218,13 +305,20 @@ export default function PersonaSolo() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(7)}
+
         {isThinking && <ThinkingBubble />}
       </ConversationThread>
 
+      <ScenarioQuickActions
+        onRestart={handleRestart}
+        onEscalate={handleEscalate}
+        labels={{ restart: "यह सिनेरियो दोबारा शुरू करें", escalate: "किसी इंसान से बात करें" }}
+      />
       <ChatComposer
-        prefill={step === 0 ? persona.samplePrompt : step === 5 ? "तो आज सुबह क्या कर सकते हैं?" : ""}
-        disabled={step !== 0 && step !== 5}
-        onSend={step === 0 ? handleSend : () => runWithThinking(() => goto(6))}
+        prefill={step === 0 ? persona.samplePrompt : step === 5 ? MID_PROMPT : ""}
+        disabled={isThinking}
+        onSend={handleComposerSend}
       />
     </div>
   );
@@ -241,5 +335,6 @@ function useDemoStoreShim() {
     createTrip: store.createTrip,
     addLearnedPreference: store.addLearnedPreference,
     addInspectorEntry: store.addInspectorEntry,
+    resetPersona: store.resetPersona,
   };
 }

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, ChevronRight } from "lucide-react";
 import { DestinationHero } from "@/components/DestinationHero";
 import { Card, SectionLabel } from "@/components/Card";
 import { Chip } from "@/components/Chip";
@@ -14,7 +14,7 @@ function statusTag(item: ItineraryItem) {
   return null;
 }
 
-function Home({ onPick }: { onPick: (id: PersonaId) => void }) {
+function WelcomeHero({ onPick }: { onPick: (id: PersonaId) => void }) {
   const navigate = useNavigate();
   return (
     <div className="app-scroll h-full overflow-y-auto px-5 py-6">
@@ -65,61 +65,142 @@ function Home({ onPick }: { onPick: (id: PersonaId) => void }) {
 }
 
 export default function TripPage() {
-  const { activePersonaId, setActivePersona, trips } = useDemoStore();
+  const { activePersonaId, setActivePersona, trips, personaStep, personaStage } = useDemoStore();
   const navigate = useNavigate();
 
-  if (!activePersonaId) {
-    return <Home onPick={setActivePersona} />;
+  const anyProgress = personas.some((p) => trips[p.id] || personaStep[p.id] > 0);
+
+  if (!anyProgress) {
+    return <WelcomeHero onPick={setActivePersona} />;
   }
 
-  const trip = trips[activePersonaId];
-  const persona = personas.find((p) => p.id === activePersonaId)!;
+  const ongoing = personas.filter((p) => trips[p.id]);
+  const upcoming = personas.filter((p) => !trips[p.id]);
+
+  const selectedTrip = activePersonaId ? trips[activePersonaId] : null;
+  const selectedPersona = activePersonaId ? personas.find((p) => p.id === activePersonaId) : undefined;
 
   return (
     <div className="app-scroll h-full overflow-y-auto px-5 py-5">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wide text-[var(--color-slate)]">Viewing</span>
-        <PersonaSelector value={activePersonaId} onChange={setActivePersona} variant="pill" />
-      </div>
+      <div className="space-y-5">
+        {ongoing.length > 0 && (
+          <div>
+            <SectionLabel>Your plans — ongoing</SectionLabel>
+            <div className="space-y-2.5">
+              {ongoing.map((p) => {
+                const trip = trips[p.id]!;
+                const Icon = p.icon;
+                const inTrip = personaStage[p.id] === "intrip";
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setActivePersona(p.id)}
+                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
+                      activePersonaId === p.id ? "border-[var(--color-navy)] bg-[var(--color-navy-soft)]" : "border-[var(--color-border)] bg-[var(--color-surface)]"
+                    }`}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[var(--color-navy)]">
+                      <Icon size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-[var(--color-ink)]">{trip.destination}</p>
+                      <p className="text-xs text-[var(--color-slate)]">
+                        {p.name} · Day {trip.dayNumber} of {trip.totalDays}
+                      </p>
+                    </div>
+                    {inTrip && <Chip tone="red">In-trip assistance active</Chip>}
+                    <ChevronRight size={16} className="shrink-0 text-[var(--color-slate)]" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-      {!trip ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--color-border)] py-16 text-center">
-          <Sparkles size={22} className="text-[var(--color-red)]" />
-          <p className="text-sm font-semibold text-[var(--color-ink)]">{persona.name} isn't booked yet</p>
-          <p className="max-w-[280px] text-xs text-[var(--color-slate)]">Keep chatting with Myra to turn this into a confirmed trip.</p>
-          <button type="button" onClick={() => navigate("/myra")} className="rounded-lg bg-[var(--color-navy)] px-4 py-2 text-xs font-bold text-white">
-            Continue in Myra
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <DestinationHero title={`${persona.name} · ${trip.destination}`} subtitle={`Day ${trip.dayNumber} of ${trip.totalDays} · ${trip.liveContext.city}`}>
-            <p className="mt-2 text-xs text-white/80">{trip.liveContext.weather}</p>
-          </DestinationHero>
+        {upcoming.length > 0 && (
+          <div>
+            <SectionLabel>Upcoming trips</SectionLabel>
+            <div className="space-y-2.5">
+              {upcoming.map((p) => {
+                const Icon = p.icon;
+                const started = personaStep[p.id] > 0;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setActivePersona(p.id);
+                      navigate("/myra");
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left transition hover:border-[var(--color-navy)]"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-bg)] text-[var(--color-slate)]">
+                      <Icon size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-[var(--color-ink)]">{p.name}</p>
+                      <p className="text-xs text-[var(--color-slate)]">{started ? "In progress — not booked yet" : "Not started"}</p>
+                    </div>
+                    <ArrowRight size={15} className="shrink-0 text-[var(--color-slate)]" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-          {Array.from(new Set(trip.itinerary.map((i) => i.day)))
-            .sort((a, b) => a - b)
-            .map((day) => (
-              <div key={day}>
-                <SectionLabel>Day {day}</SectionLabel>
-                <Card className="divide-y divide-[var(--color-border)] p-0">
-                  {trip.itinerary
-                    .filter((i) => i.day === day)
-                    .map((item) => {
-                      const tag = statusTag(item);
-                      return (
-                        <div key={item.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-                          <span className="w-14 shrink-0 font-semibold text-[var(--color-slate)]">{item.time}</span>
-                          <span className="flex-1 text-[var(--color-ink)]">{item.title}</span>
-                          {tag && <Chip tone={tag.tone}>{tag.label}</Chip>}
-                        </div>
-                      );
-                    })}
-                </Card>
+        {selectedPersona && (
+          <div className="border-t border-[var(--color-border)] pt-5">
+            <div className="mb-3 flex items-center justify-between">
+              <SectionLabel>Trip detail</SectionLabel>
+              <PersonaSelector value={activePersonaId} onChange={setActivePersona} variant="pill" />
+            </div>
+
+            {!selectedTrip ? (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--color-border)] py-16 text-center">
+                <Sparkles size={22} className="text-[var(--color-red)]" />
+                <p className="text-sm font-semibold text-[var(--color-ink)]">{selectedPersona.name} isn't booked yet</p>
+                <p className="max-w-[280px] text-xs text-[var(--color-slate)]">Keep chatting with Myra to turn this into a confirmed trip.</p>
+                <button type="button" onClick={() => navigate("/myra")} className="rounded-lg bg-[var(--color-navy)] px-4 py-2 text-xs font-bold text-white">
+                  Continue in Myra
+                </button>
               </div>
-            ))}
-        </div>
-      )}
+            ) : (
+              <div className="space-y-4">
+                <DestinationHero
+                  title={`${selectedPersona.name} · ${selectedTrip.destination}`}
+                  subtitle={`Day ${selectedTrip.dayNumber} of ${selectedTrip.totalDays} · ${selectedTrip.liveContext.city}`}
+                >
+                  <p className="mt-2 text-xs text-white/80">{selectedTrip.liveContext.weather}</p>
+                </DestinationHero>
+
+                {Array.from(new Set(selectedTrip.itinerary.map((i) => i.day)))
+                  .sort((a, b) => a - b)
+                  .map((day) => (
+                    <div key={day}>
+                      <SectionLabel>Day {day}</SectionLabel>
+                      <Card className="divide-y divide-[var(--color-border)] p-0">
+                        {selectedTrip.itinerary
+                          .filter((i) => i.day === day)
+                          .map((item) => {
+                            const tag = statusTag(item);
+                            return (
+                              <div key={item.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                                <span className="w-14 shrink-0 font-semibold text-[var(--color-slate)]">{item.time}</span>
+                                <span className="flex-1 text-[var(--color-ink)]">{item.title}</span>
+                                {tag && <Chip tone={tag.tone}>{tag.label}</Chip>}
+                              </div>
+                            );
+                          })}
+                      </Card>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

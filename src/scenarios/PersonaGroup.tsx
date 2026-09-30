@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MyraBubble } from "@/components/MyraBubble";
 import { ConversationThread } from "@/components/myra/ConversationThread";
 import { ChatComposer } from "@/components/myra/ChatComposer";
+import { ScenarioQuickActions } from "@/components/myra/ScenarioQuickActions";
 import { GeneratedUIContainer, ThinkingBubble } from "@/components/myra/GeneratedUIContainer";
 import { useThinking } from "@/components/myra/useThinking";
 import { IntentSummaryCard } from "@/components/generative/IntentSummaryCard";
@@ -15,12 +16,17 @@ import { ComparisonMatrix } from "@/components/generative/ComparisonMatrix";
 import { ApprovalSheet } from "@/components/generative/ApprovalSheet";
 import { ExecutionTracker } from "@/components/generative/ExecutionTracker";
 import { TripCreatedCelebration } from "@/components/generative/TripCreatedCelebration";
+import { BookingConsentSheet } from "@/components/generative/BookingConsentSheet";
 import { Card, SectionLabel } from "@/components/Card";
 import { destinationOptions, groupMembers, groupStayVoteByDestination, groupSplitEventByDestination } from "@/data/demoInventory";
 import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
 
 const persona = personas.find((p) => p.id === "group")!;
+const MID_PROMPT = "what should we do?";
+const FREEFORM_ACK = "Got it — I'll factor that in for the group.";
+const ESCALATE_USER_TEXT = "Can someone from your team help us directly?";
+const ESCALATE_REPLY = "I've flagged this for a human travel expert — they'll join here within a few minutes. I'll keep coordinating with the group in the meantime.";
 
 const intentFacts = [
   { label: "Group size", value: "4 friends" },
@@ -51,11 +57,17 @@ export default function PersonaGroup() {
     groupVoteFinalized,
     finalizeGroupVote,
     addInspectorEntry,
+    resetPersona,
   } = useDemoStoreShim();
   const step = personaStep;
   const [exploredId, setExploredId] = useState<string | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [approved, setApproved] = useState(false);
+  const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
+  const [sentMid, setSentMid] = useState(MID_PROMPT);
+  const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
+  const [paymentApproved, setPaymentApproved] = useState(false);
   const { isThinking, runWithThinking } = useThinking();
   const navigate = useNavigate();
 
@@ -63,6 +75,7 @@ export default function PersonaGroup() {
   const stayVote = explored ? groupStayVoteByDestination[explored.id] ?? [] : [];
   const splitEvent = explored ? groupSplitEventByDestination[explored.id] : null;
   const option = splitEvent?.options.find((o) => o.id === recoverySelection) ?? null;
+  const perPersonAmount = explored ? Math.round(explored.estCost * 0.62) : 0;
 
   useEffect(() => {
     if (step === 0) return;
@@ -128,16 +141,13 @@ export default function PersonaGroup() {
     setPersonaStep("group", next);
   }
 
-  function handleSend() {
-    runWithThinking(() => goto(1));
-  }
-
   function handleLooksRight() {
     runWithThinking(() => goto(2));
   }
 
   function handleExplore(id: string) {
     setExploredId(id);
+    setAwaitingPayment(false);
     goto(3);
   }
 
@@ -146,8 +156,13 @@ export default function PersonaGroup() {
     goto(4);
   }
 
-  function handleCreateTrip() {
+  function handleRequestPayment() {
+    setAwaitingPayment(true);
+  }
+
+  function handleApprovePayment() {
     if (!explored) return;
+    setPaymentApproved(true);
     createTrip("group", explored);
     goto(5);
   }
@@ -175,10 +190,53 @@ export default function PersonaGroup() {
     goto(9);
   }
 
+  function handleComposerSend(text: string) {
+    if (step === 0) {
+      setSentIntent(text);
+      runWithThinking(() => goto(1));
+    } else if (step === 6) {
+      setSentMid(text);
+      runWithThinking(() => goto(7));
+    } else {
+      const atStep = step;
+      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]));
+    }
+  }
+
+  function handleRestart() {
+    resetPersona("group");
+    setExploredId(null);
+    setShowCompare(false);
+    setApproved(false);
+    setSentIntent(persona.samplePrompt);
+    setSentMid(MID_PROMPT);
+    setNotes([]);
+    setAwaitingPayment(false);
+    setPaymentApproved(false);
+  }
+
+  function handleEscalate() {
+    const atStep = step;
+    runWithThinking(() => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]));
+  }
+
+  function notesAt(atStep: number) {
+    return notes
+      .filter((n) => n.atStep === atStep)
+      .map((n, i) => (
+        <Fragment key={`note-${atStep}-${i}`}>
+          <MyraBubble from="user">{n.user}</MyraBubble>
+          <MyraBubble>{n.reply}</MyraBubble>
+        </Fragment>
+      ));
+  }
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <ConversationThread>
-        {step >= 1 && <MyraBubble from="user">{persona.samplePrompt}</MyraBubble>}
+        {notesAt(0)}
+
+        {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && <MyraBubble>Got it — I'll pull in what everyone else told me too, not just your input.</MyraBubble>}
 
         {step >= 1 && (
@@ -186,6 +244,8 @@ export default function PersonaGroup() {
             <IntentSummaryCard facts={intentFacts} onLooksRight={handleLooksRight} confirmed={step >= 2} />
           </GeneratedUIContainer>
         )}
+
+        {notesAt(1)}
 
         {step >= 2 && (
           <GeneratedUIContainer>
@@ -201,6 +261,8 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(2)}
+
         {step >= 3 && explored && stayVote.length > 0 && (
           <>
             <MyraBubble>I put two stay options to a vote in your group chat.</MyraBubble>
@@ -210,7 +272,9 @@ export default function PersonaGroup() {
           </>
         )}
 
-        {step >= 4 && explored && (
+        {notesAt(3)}
+
+        {step >= 4 && explored && !awaitingPayment && (
           <GeneratedUIContainer>
             <Card>
               <SectionLabel>{explored.name} · 4-day plan, split cost</SectionLabel>
@@ -220,11 +284,11 @@ export default function PersonaGroup() {
               </ul>
               <div className="mt-3 flex items-center justify-between rounded-lg bg-[var(--color-bg)] px-3 py-2 text-xs">
                 <span className="text-[var(--color-slate)]">Per person (flights + stays, est.)</span>
-                <span className="font-bold text-[var(--color-ink)]">₹{Math.round(explored.estCost * 0.62).toLocaleString("en-IN")}</span>
+                <span className="font-bold text-[var(--color-ink)]">₹{perPersonAmount.toLocaleString("en-IN")}</span>
               </div>
               <button
                 type="button"
-                onClick={handleCreateTrip}
+                onClick={handleRequestPayment}
                 disabled={step >= 5}
                 className="mt-3 w-full rounded-lg bg-[var(--color-red)] py-2.5 text-xs font-bold text-white disabled:opacity-60"
               >
@@ -233,6 +297,20 @@ export default function PersonaGroup() {
             </Card>
           </GeneratedUIContainer>
         )}
+
+        {step === 4 && explored && awaitingPayment && (
+          <GeneratedUIContainer>
+            <BookingConsentSheet
+              destinationName={`${explored.name} (your share)`}
+              amount={perPersonAmount}
+              onApprove={handleApprovePayment}
+              onCancel={() => setAwaitingPayment(false)}
+              approved={paymentApproved}
+            />
+          </GeneratedUIContainer>
+        )}
+
+        {notesAt(4)}
 
         {step >= 5 && (
           <>
@@ -254,6 +332,8 @@ export default function PersonaGroup() {
           </>
         )}
 
+        {notesAt(5)}
+
         {step >= 6 && splitEvent && <MyraBubble>Heads up — tonight's plans are splitting between the group.</MyraBubble>}
 
         {step >= 6 && splitEvent && (
@@ -262,7 +342,7 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
-        {step >= 7 && <MyraBubble from="user">what should we do?</MyraBubble>}
+        {step >= 7 && <MyraBubble from="user">{sentMid}</MyraBubble>}
         {step >= 7 && <MyraBubble>Two ways to resolve this without anyone losing out on their plan.</MyraBubble>}
 
         {step >= 7 && splitEvent && (
@@ -277,11 +357,15 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(7)}
+
         {step >= 8 && option && (
           <GeneratedUIContainer>
             <ApprovalSheet option={option} actions={actionsFor(option.id)} traveller={traveller} onApprove={handleApprove} onCancel={() => goto(7)} approved={approved} />
           </GeneratedUIContainer>
         )}
+
+        {notesAt(8)}
 
         {step >= 9 && (
           <GeneratedUIContainer>
@@ -289,13 +373,17 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(9)}
+        {notesAt(10)}
+
         {isThinking && <ThinkingBubble />}
       </ConversationThread>
 
+      <ScenarioQuickActions onRestart={handleRestart} onEscalate={handleEscalate} />
       <ChatComposer
-        prefill={step === 0 ? persona.samplePrompt : step === 6 ? "what should we do?" : ""}
-        disabled={step !== 0 && step !== 6}
-        onSend={step === 0 ? handleSend : () => runWithThinking(() => goto(7))}
+        prefill={step === 0 ? persona.samplePrompt : step === 6 ? MID_PROMPT : ""}
+        disabled={isThinking}
+        onSend={handleComposerSend}
       />
     </div>
   );
@@ -317,5 +405,6 @@ function useDemoStoreShim() {
     groupVoteFinalized: store.groupVoteFinalized,
     finalizeGroupVote: store.finalizeGroupVote,
     addInspectorEntry: store.addInspectorEntry,
+    resetPersona: store.resetPersona,
   };
 }

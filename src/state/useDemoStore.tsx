@@ -76,6 +76,7 @@ interface DemoStoreValue extends PersistedState {
   toggleInspector: () => void;
   setInspectorOpen: (open: boolean) => void;
   addInspectorEntry: (id: PersonaId, entry: InspectorSnapshot) => void;
+  resetPersona: (id: PersonaId) => void;
   resetDemo: () => void;
 }
 
@@ -164,6 +165,22 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const resetPersona = useCallback(
+    (id: PersonaId) =>
+      setState((s) => ({
+        ...s,
+        personaStep: { ...s.personaStep, [id]: 0 },
+        personaStage: { ...s.personaStage, [id]: "discovery" },
+        trips: { ...s.trips, [id]: null },
+        tripDestinationId: { ...s.tripDestinationId, [id]: null },
+        learnedPreferences: { ...s.learnedPreferences, [id]: [] },
+        recoverySelection: { ...s.recoverySelection, [id]: null },
+        inspectorHistory: { ...s.inspectorHistory, [id]: [] },
+        groupVoteFinalized: id === "group" ? null : s.groupVoteFinalized,
+      })),
+    []
+  );
+
   const resetDemo = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
     setState(initialState);
@@ -184,6 +201,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       toggleInspector,
       setInspectorOpen,
       addInspectorEntry,
+      resetPersona,
       resetDemo,
     }),
     [
@@ -200,6 +218,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       toggleInspector,
       setInspectorOpen,
       addInspectorEntry,
+      resetPersona,
       resetDemo,
     ]
   );

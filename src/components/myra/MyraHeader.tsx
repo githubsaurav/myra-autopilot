@@ -28,7 +28,12 @@ export function MyraHeader({
       {persona && onChangePersona && (
         <div className="mt-2.5 flex items-center gap-2">
           <PersonaSelector value={persona.id} onChange={onChangePersona} variant="pill" />
-          <span className="rounded-full bg-black/[0.05] px-2 py-1 text-[10px] font-semibold text-[var(--color-ink)]">{persona.languageLabel}</span>
+          <span
+            className="flex items-center gap-1 rounded-full bg-black/[0.05] px-2 py-1 text-[10px] font-semibold text-[var(--color-ink)]"
+            title="Myra can hold this conversation in multiple languages — this persona is scripted in the one shown"
+          >
+            🌐 Chat in {persona.languageLabel}
+          </span>
         </div>
       )}
     </div>

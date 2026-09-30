@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MyraBubble } from "@/components/MyraBubble";
 import { ConversationThread } from "@/components/myra/ConversationThread";
 import { ChatComposer } from "@/components/myra/ChatComposer";
+import { ScenarioQuickActions } from "@/components/myra/ScenarioQuickActions";
 import { GeneratedUIContainer, ThinkingBubble } from "@/components/myra/GeneratedUIContainer";
 import { useThinking } from "@/components/myra/useThinking";
 import { IntentSummaryCard } from "@/components/generative/IntentSummaryCard";
@@ -13,12 +14,17 @@ import { ComparisonMatrix } from "@/components/generative/ComparisonMatrix";
 import { ApprovalSheet } from "@/components/generative/ApprovalSheet";
 import { ExecutionTracker } from "@/components/generative/ExecutionTracker";
 import { TripCreatedCelebration } from "@/components/generative/TripCreatedCelebration";
+import { BookingConsentSheet } from "@/components/generative/BookingConsentSheet";
 import { Card, SectionLabel } from "@/components/Card";
 import { destinationOptions, familyWeatherDisruption } from "@/data/demoInventory";
 import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
 
 const persona = personas.find((p) => p.id === "family")!;
+const MID_PROMPT = "what should we do?";
+const FREEFORM_ACK = "Got it — I'll factor that into the plan.";
+const ESCALATE_USER_TEXT = "Can someone from your team help me directly?";
+const ESCALATE_REPLY = "I've flagged this for a human travel expert — they'll join here within a few minutes. I'll keep coordinating in the meantime.";
 
 const intentFacts = [
   { label: "Duration", value: "5–6 days" },
@@ -38,12 +44,28 @@ const actionsFor = (optionId: string) =>
 const executionSteps = ["Moving activity", "Extending hotel", "Updating transfer", "Updating itinerary", "Notifying co-travellers"];
 
 export default function PersonaFamily() {
-  const { personaStep, setPersonaStep, setPersonaStage, trip, traveller, createTrip, mutateTrip, recoverySelection, selectRecoveryOption, addInspectorEntry } =
-    useDemoStoreShim();
+  const {
+    personaStep,
+    setPersonaStep,
+    setPersonaStage,
+    trip,
+    traveller,
+    createTrip,
+    mutateTrip,
+    recoverySelection,
+    selectRecoveryOption,
+    addInspectorEntry,
+    resetPersona,
+  } = useDemoStoreShim();
   const step = personaStep;
   const [exploredId, setExploredId] = useState<string | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [approved, setApproved] = useState(false);
+  const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
+  const [sentMid, setSentMid] = useState(MID_PROMPT);
+  const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
+  const [paymentApproved, setPaymentApproved] = useState(false);
   const { isThinking, runWithThinking } = useThinking();
   const navigate = useNavigate();
 
@@ -109,21 +131,23 @@ export default function PersonaFamily() {
     setPersonaStep("family", next);
   }
 
-  function handleSend() {
-    runWithThinking(() => goto(1));
-  }
-
   function handleLooksRight() {
     runWithThinking(() => goto(2));
   }
 
   function handleExplore(id: string) {
     setExploredId(id);
+    setAwaitingPayment(false);
     goto(3);
   }
 
-  function handleCreateTrip() {
+  function handleRequestPayment() {
+    setAwaitingPayment(true);
+  }
+
+  function handleApprovePayment() {
     if (!explored) return;
+    setPaymentApproved(true);
     createTrip("family", explored);
     goto(4);
   }
@@ -169,12 +193,55 @@ export default function PersonaFamily() {
     goto(8);
   }
 
+  function handleComposerSend(text: string) {
+    if (step === 0) {
+      setSentIntent(text);
+      runWithThinking(() => goto(1));
+    } else if (step === 5) {
+      setSentMid(text);
+      runWithThinking(() => goto(6));
+    } else {
+      const atStep = step;
+      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]));
+    }
+  }
+
+  function handleRestart() {
+    resetPersona("family");
+    setExploredId(null);
+    setShowCompare(false);
+    setApproved(false);
+    setSentIntent(persona.samplePrompt);
+    setSentMid(MID_PROMPT);
+    setNotes([]);
+    setAwaitingPayment(false);
+    setPaymentApproved(false);
+  }
+
+  function handleEscalate() {
+    const atStep = step;
+    runWithThinking(() => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]));
+  }
+
   const explored = destinationOptions.family.find((d) => d.id === exploredId);
+
+  function notesAt(atStep: number) {
+    return notes
+      .filter((n) => n.atStep === atStep)
+      .map((n, i) => (
+        <Fragment key={`note-${atStep}-${i}`}>
+          <MyraBubble from="user">{n.user}</MyraBubble>
+          <MyraBubble>{n.reply}</MyraBubble>
+        </Fragment>
+      ));
+  }
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <ConversationThread>
-        {step >= 1 && <MyraBubble from="user">{persona.samplePrompt}</MyraBubble>}
+        {notesAt(0)}
+
+        {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && (
           <MyraBubble>Got it. I'll keep the trip comfortable for your parents, avoid visa-heavy options, and stay around your budget.</MyraBubble>
         )}
@@ -185,6 +252,8 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(1)}
+
         {step >= 2 && <MyraBubble>Here are three destinations that fit — pick any of them to see the full plan.</MyraBubble>}
 
         {step >= 2 && (
@@ -193,7 +262,9 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
-        {step >= 3 && explored && (
+        {notesAt(2)}
+
+        {step >= 3 && explored && !awaitingPayment && (
           <GeneratedUIContainer>
             <Card>
               <SectionLabel>{explored.name} · 6-day itinerary preview</SectionLabel>
@@ -209,7 +280,7 @@ export default function PersonaFamily() {
               </div>
               <button
                 type="button"
-                onClick={handleCreateTrip}
+                onClick={handleRequestPayment}
                 disabled={step >= 4}
                 className="mt-3 w-full rounded-lg bg-[var(--color-red)] py-2.5 text-xs font-bold text-white disabled:opacity-60"
               >
@@ -218,6 +289,20 @@ export default function PersonaFamily() {
             </Card>
           </GeneratedUIContainer>
         )}
+
+        {step === 3 && explored && awaitingPayment && (
+          <GeneratedUIContainer>
+            <BookingConsentSheet
+              destinationName={explored.name}
+              amount={explored.estCost}
+              onApprove={handleApprovePayment}
+              onCancel={() => setAwaitingPayment(false)}
+              approved={paymentApproved}
+            />
+          </GeneratedUIContainer>
+        )}
+
+        {notesAt(3)}
 
         {step >= 4 && (
           <>
@@ -239,6 +324,8 @@ export default function PersonaFamily() {
           </>
         )}
 
+        {notesAt(4)}
+
         {step >= 5 && <MyraBubble>Tomorrow's activity is confirmed for 9 AM.</MyraBubble>}
 
         {step >= 5 && (
@@ -249,7 +336,7 @@ export default function PersonaFamily() {
 
         {step >= 5 && <MyraBubble>I checked the rest of your trip. This affects more than the activity, so I mapped the impact before suggesting changes.</MyraBubble>}
 
-        {step >= 6 && <MyraBubble from="user">what should we do?</MyraBubble>}
+        {step >= 6 && <MyraBubble from="user">{sentMid}</MyraBubble>}
         {step >= 6 && <MyraBubble>I found two workable recovery plans. Both respect your refundable-only preference.</MyraBubble>}
 
         {step >= 6 && (
@@ -264,11 +351,15 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(6)}
+
         {step >= 7 && option && (
           <GeneratedUIContainer>
             <ApprovalSheet option={option} actions={actionsFor(option.id)} traveller={traveller} onApprove={handleApprove} onCancel={() => goto(6)} approved={approved} />
           </GeneratedUIContainer>
         )}
+
+        {notesAt(7)}
 
         {step >= 8 && (
           <GeneratedUIContainer>
@@ -276,13 +367,17 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
+        {notesAt(8)}
+        {notesAt(9)}
+
         {isThinking && <ThinkingBubble />}
       </ConversationThread>
 
+      <ScenarioQuickActions onRestart={handleRestart} onEscalate={handleEscalate} />
       <ChatComposer
-        prefill={step === 0 ? persona.samplePrompt : step === 5 ? "what should we do?" : ""}
-        disabled={step !== 0 && step !== 5}
-        onSend={step === 0 ? handleSend : () => runWithThinking(() => goto(6))}
+        prefill={step === 0 ? persona.samplePrompt : step === 5 ? MID_PROMPT : ""}
+        disabled={isThinking}
+        onSend={handleComposerSend}
       />
     </div>
   );
@@ -302,5 +397,6 @@ function useDemoStoreShim() {
     recoverySelection: store.recoverySelection.family,
     selectRecoveryOption: store.selectRecoveryOption,
     addInspectorEntry: store.addInspectorEntry,
+    resetPersona: store.resetPersona,
   };
 }
