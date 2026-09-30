@@ -1,3 +1,5 @@
+import { chooseLocalExperience } from "@/lib/travelAssistant";
+import { useTravelChat } from "@/components/myra/useTravelChat";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MyraBubble } from "@/components/MyraBubble";
@@ -20,9 +22,8 @@ import type { ContextualOption } from "@/types/demo";
 
 const persona = personas.find((p) => p.id === "solo")!;
 const MID_PROMPT = "तो आज सुबह क्या कर सकते हैं?";
-const FREEFORM_ACK = "समझ गई — मैं इसे ध्यान में रखूंगी।";
 const ESCALATE_USER_TEXT = "क्या आपकी टीम से कोई सीधे मदद कर सकता है?";
-const ESCALATE_REPLY = "मैंने इसे एक ह्यूमन ट्रैवल एक्सपर्ट के पास भेज दिया है — वे कुछ ही मिनटों में यहां जुड़ेंगे। तब तक मैं समन्वय जारी रखूंगी।";
+const ESCALATE_REPLY = "यह सिर्फ सपोर्ट हैंडऑफ़ का डेमो है। किसी वास्तविक ट्रैवल एक्सपर्ट से संपर्क नहीं होता। लाइव प्रोडक्ट में आपका यात्रा संदर्भ और बातचीत सपोर्ट टीम को भेजी जाएगी।";
 
 const intentFacts = [
   { label: "यात्री", value: "अकेले" },
@@ -46,19 +47,21 @@ export default function PersonaSolo() {
     addInspectorEntry,
     resetPersona,
   } = useDemoStoreShim();
+  const [activityFeedback, setActivityFeedback] = useState("");
   const step = personaStep;
-  const [added, setAdded] = useState<ContextualOption | null>(null);
-  const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
-  const [sentMid, setSentMid] = useState(MID_PROMPT);
-  const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
+  const { mutateTrip } = useDemoStore();
+
+  const { sentIntent, setSentIntent, sentMid, setSentMid, notes, setNotes, replyTo } = useTravelChat("solo", persona.samplePrompt, MID_PROMPT);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const { isThinking, thinkingLabel, runWithThinking } = useThinking();
+  const { isThinking, thinkingLabel, runWithThinking, cancelThinking } = useThinking();
   const navigate = useNavigate();
 
   const explored = destinationOptions.solo.find((d) => d.id === exploredDestinationId);
   const dependency = explored ? soloDependencyByDestination[explored.id] : null;
   const hyperLocalOptions = explored ? soloHyperLocalOptionsByDestination[explored.id] ?? [] : [];
+
+  const added = hyperLocalOptions.find(o => trip?.itinerary.some(i => i.id === `myra-local-${o.id}`)) ?? null;
 
   useEffect(() => {
     if (step === 0) return;
@@ -124,6 +127,7 @@ export default function PersonaSolo() {
   }
 
   function handleExplore(id: string) {
+    if (step >= 4 || isThinking) return;
     setExploredDestination("solo", id);
     setAwaitingPayment(false);
     runWithThinking(
@@ -150,11 +154,20 @@ export default function PersonaSolo() {
   }
 
   function handleAdd(option: ContextualOption) {
-    setAdded(option);
+    if (!trip || !option.availableNow) return;
+    const next = chooseLocalExperience(trip, option);
+    setActivityFeedback(next === trip ? "There is no free activity slot to replace today." : "Activity added to your itinerary. Open Itinerary to see the update.");
+    mutateTrip("solo", t => chooseLocalExperience(t, option));
     goto(7);
   }
 
   function handleComposerSend(text: string) {
+    const isJourneyPrompt = step === 5 && text.trim() === MID_PROMPT;
+    const answer = step === 0 || isJourneyPrompt ? null : replyTo(text);
+    if (answer) {
+      runWithThinking(() => setNotes(n => [...n, { id: crypto.randomUUID(), user: text, reply: answer, atStep: step }]), "Checking your trip details");
+      return;
+    }
     if (step === 0) {
       setSentIntent(text);
       runWithThinking(() => goto(1), "मैं आपकी बात समझ रही हूं");
@@ -163,13 +176,14 @@ export default function PersonaSolo() {
       runWithThinking(() => goto(6), "मैं आस-पास के विकल्प ढूंढ रही हूं");
     } else {
       const atStep = step;
-      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]), "नोट कर रही हूं");
+      runWithThinking(() => setNotes((n) => [...n, { id: crypto.randomUUID(), user: text, reply: "I can help with your itinerary, budget, bookings, weather, and preferences in this guided demo. Try a suggested question below, or use a trip card to make a change.", atStep }]), "नोट कर रही हूं");
     }
   }
 
   function handleRestart() {
+    cancelThinking();
+    setActivityFeedback("");
     resetPersona("solo");
-    setAdded(null);
     setSentIntent(persona.samplePrompt);
     setSentMid(MID_PROMPT);
     setNotes([]);
@@ -180,16 +194,15 @@ export default function PersonaSolo() {
   function handleEscalate() {
     const atStep = step;
     runWithThinking(
-      () => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
-      "आपको एक ह्यूमन एक्सपर्ट से जोड़ रही हूं"
+      () => setNotes((n) => [...n, { id: crypto.randomUUID(), user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
+      "सपोर्ट हैंडऑफ़ का डेमो"
     );
   }
 
-  function notesAt(atStep: number) {
+  function renderNotes() {
     return notes
-      .filter((n) => n.atStep === atStep)
-      .map((n, i) => (
-        <Fragment key={`note-${atStep}-${i}`}>
+      .map((n) => (
+        <Fragment key={n.id}>
           <MyraBubble from="user">{n.user}</MyraBubble>
           <MyraBubble>{n.reply}</MyraBubble>
         </Fragment>
@@ -199,7 +212,6 @@ export default function PersonaSolo() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <ConversationThread>
-        {notesAt(0)}
 
         {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && <MyraBubble>समझ गई — मैं दूर, कम भीड़ वाली और असली लोकल कल्चर वाली जगहें ढूंढ रही हूं, टूरिस्ट लिस्ट नहीं।</MyraBubble>}
@@ -215,7 +227,6 @@ export default function PersonaSolo() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(1)}
 
         {step >= 2 && (
           <MyraBubble>मैं आपके लिए सबसे ऑफबीट, कम भीड़ वाली और असली लोकल कल्चर वाली जगहें ढूंढ और क्यूरेट कर रही हूं...</MyraBubble>
@@ -224,11 +235,10 @@ export default function PersonaSolo() {
 
         {step >= 2 && (
           <GeneratedUIContainer>
-            <DestinationGrid options={destinationOptions.solo} onExplore={handleExplore} labels={{ recommended: "अनुशंसित", explore: "एक्सप्लोर करें" }} />
+            <DestinationGrid options={destinationOptions.solo} onExplore={handleExplore} disabled={isThinking || step >= 4} labels={{ recommended: "अनुशंसित", explore: "एक्सप्लोर करें" }} />
           </GeneratedUIContainer>
         )}
 
-        {notesAt(2)}
 
         {step >= 3 && explored && (
           <>
@@ -306,7 +316,6 @@ export default function PersonaSolo() {
           </>
         )}
 
-        {notesAt(3)}
 
         {step >= 4 && (
           <>
@@ -328,7 +337,6 @@ export default function PersonaSolo() {
           </>
         )}
 
-        {notesAt(4)}
 
         {step >= 5 && <MyraBubble>सुप्रभात। आज सुबह लोकल कंडीशन बदल गई है, तो आपका प्लान थोड़ा खुला है।</MyraBubble>}
 
@@ -349,7 +357,6 @@ export default function PersonaSolo() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(6)}
 
         {step >= 7 && added && (
           <GeneratedUIContainer>
@@ -363,15 +370,16 @@ export default function PersonaSolo() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(7)}
 
+        {activityFeedback && <p role="status" className="activity-feedback">{activityFeedback}</p>}
+        {renderNotes()}
         {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 
       <ScenarioQuickActions
         onRestart={handleRestart}
         onEscalate={handleEscalate}
-        labels={{ restart: "यह सिनेरियो दोबारा शुरू करें", escalate: "किसी इंसान से बात करें" }}
+        labels={{ restart: "यह सिनेरियो दोबारा शुरू करें", escalate: "सपोर्ट डेमो" }}
       />
       <ChatComposer
         prefill={step === 0 ? persona.samplePrompt : step === 5 ? MID_PROMPT : ""}

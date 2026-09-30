@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { useDemoStore } from "@/state/useDemoStore";
 import { ArrowUp, Sparkles } from "lucide-react";
 
 export function ChatComposer({ prefill, disabled, onSend }: {
@@ -6,9 +7,22 @@ export function ChatComposer({ prefill, disabled, onSend }: {
   disabled?: boolean;
   onSend: (text: string) => void;
 }) {
-  const [value, setValue] = useState(prefill);
+  const { activePersonaId, conversations, updateConversation } = useDemoStore();
+  const value = activePersonaId ? conversations[activePersonaId].draft : "";
+  const lastPrefill = useRef(prefill);
+  function setValue(draft: string) {
+    if (activePersonaId) updateConversation(activePersonaId, c => ({ ...c, draft }));
+  }
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => { setValue(prefill); }, [prefill]);
+  useEffect(() => {
+    if (!activePersonaId) return;
+    if (lastPrefill.current !== prefill) {
+      updateConversation(activePersonaId, c => ({ ...c, draft: prefill }));
+    } else if (prefill) {
+      updateConversation(activePersonaId, c => c.draft ? c : { ...c, draft: prefill });
+    }
+    lastPrefill.current = prefill;
+  }, [prefill, activePersonaId, updateConversation]);
   useEffect(() => {
     const input = inputRef.current;
     if (input) {
@@ -23,6 +37,9 @@ export function ChatComposer({ prefill, disabled, onSend }: {
   }
   return (
     <div className="composer-area">
+      <div className="suggested-prompts" aria-label="Suggested questions">
+        {(activePersonaId === "solo" ? ["लोकल अनुभव दिखाओ", "आज का प्लान", "मेरा बजट"] : ["What’s my itinerary today?", "Show my bookings", "What’s my budget?"]).map(prompt => <button key={prompt} disabled={disabled} onClick={() => { onSend(prompt); setValue(""); }}>{prompt}</button>)}
+      </div>
       <div className="chat-composer">
         <Sparkles className="composer-sparkle" size={18} aria-hidden="true" />
         <textarea
@@ -38,7 +55,7 @@ export function ChatComposer({ prefill, disabled, onSend }: {
             }
           }}
           rows={1}
-          placeholder={disabled ? "Choose an option above to continue…" : "A thought, a question, a change of plan…"}
+          placeholder={disabled ? "Myra is preparing your reply…" : "A thought, a question, a change of plan…"}
         />
         <button type="button" onClick={handleSend} disabled={disabled || !value.trim()} aria-label="Send">
           <ArrowUp size={20} />

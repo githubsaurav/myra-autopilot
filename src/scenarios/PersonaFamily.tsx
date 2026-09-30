@@ -1,3 +1,4 @@
+import { useTravelChat } from "@/components/myra/useTravelChat";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MyraBubble } from "@/components/MyraBubble";
@@ -22,9 +23,8 @@ import { useDemoStore } from "@/state/useDemoStore";
 
 const persona = personas.find((p) => p.id === "family")!;
 const MID_PROMPT = "what should we do?";
-const FREEFORM_ACK = "Got it — I'll factor that into the plan.";
 const ESCALATE_USER_TEXT = "Can someone from your team help me directly?";
-const ESCALATE_REPLY = "I've flagged this for a human travel expert — they'll join here within a few minutes. I'll keep coordinating in the meantime.";
+const ESCALATE_REPLY = "This demo can show the handoff, but it does not contact a real travel expert. In a live product, your trip context and this conversation would be shared with support.";
 
 const intentFacts = [
   { label: "Duration", value: "5–6 days" },
@@ -62,12 +62,10 @@ export default function PersonaFamily() {
   const step = personaStep;
   const [showCompare, setShowCompare] = useState(false);
   const [approved, setApproved] = useState(false);
-  const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
-  const [sentMid, setSentMid] = useState(MID_PROMPT);
-  const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
+  const { sentIntent, setSentIntent, sentMid, setSentMid, notes, setNotes, replyTo } = useTravelChat("family", persona.samplePrompt, MID_PROMPT);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const { isThinking, thinkingLabel, runWithThinking } = useThinking();
+  const { isThinking, thinkingLabel, runWithThinking, cancelThinking } = useThinking();
   const navigate = useNavigate();
 
   const option = familyWeatherDisruption.options.find((o) => o.id === recoverySelection) ?? null;
@@ -147,6 +145,7 @@ export default function PersonaFamily() {
   }
 
   function handleExplore(id: string) {
+    if (step >= 4 || isThinking) return;
     setExploredDestination("family", id);
     setAwaitingPayment(false);
     goto(3);
@@ -164,11 +163,13 @@ export default function PersonaFamily() {
   }
 
   function handleApplyOption(id: string) {
+    if (step >= 8) return;
     selectRecoveryOption("family", id);
     goto(7);
   }
 
   function handleApprove() {
+    if (step >= 8) return;
     mutateTrip("family", (t) => {
       const chosen = familyWeatherDisruption.options.find((o) => o.id === recoverySelection);
       if (!chosen) return t;
@@ -205,6 +206,11 @@ export default function PersonaFamily() {
   }
 
   function handleComposerSend(text: string) {
+    const answer = step === 0 ? null : replyTo(text);
+    if (answer) {
+      runWithThinking(() => setNotes(n => [...n, { id: crypto.randomUUID(), user: text, reply: answer, atStep: step }]), "Checking your trip details");
+      return;
+    }
     if (step === 0) {
       setSentIntent(text);
       runWithThinking(() => goto(1), "Myra is understanding your trip");
@@ -213,11 +219,12 @@ export default function PersonaFamily() {
       runWithThinking(() => goto(6), "Myra is working out backup plans for you");
     } else {
       const atStep = step;
-      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]), "Myra is noting that down");
+      runWithThinking(() => setNotes((n) => [...n, { id: crypto.randomUUID(), user: text, reply: "I can help with your itinerary, budget, bookings, weather, and preferences in this guided demo. Try a suggested question below, or use a trip card to make a change.", atStep }]), "Myra is noting that down");
     }
   }
 
   function handleRestart() {
+    cancelThinking();
     resetPersona("family");
     setShowCompare(false);
     setApproved(false);
@@ -231,18 +238,17 @@ export default function PersonaFamily() {
   function handleEscalate() {
     const atStep = step;
     runWithThinking(
-      () => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
-      "Myra is connecting you with a human expert"
+      () => setNotes((n) => [...n, { id: crypto.randomUUID(), user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
+      "Showing the support handoff"
     );
   }
 
   const explored = destinationOptions.family.find((d) => d.id === exploredDestinationId);
 
-  function notesAt(atStep: number) {
+  function renderNotes() {
     return notes
-      .filter((n) => n.atStep === atStep)
-      .map((n, i) => (
-        <Fragment key={`note-${atStep}-${i}`}>
+      .map((n) => (
+        <Fragment key={n.id}>
           <MyraBubble from="user">{n.user}</MyraBubble>
           <MyraBubble>{n.reply}</MyraBubble>
         </Fragment>
@@ -252,7 +258,6 @@ export default function PersonaFamily() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <ConversationThread>
-        {notesAt(0)}
 
         {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && (
@@ -265,17 +270,15 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(1)}
 
         {step >= 2 && <MyraBubble>Here are three destinations that fit — pick any of them to see the full plan.</MyraBubble>}
 
         {step >= 2 && (
           <GeneratedUIContainer>
-            <DestinationGrid options={destinationOptions.family} onExplore={handleExplore} />
+            <DestinationGrid options={destinationOptions.family} onExplore={handleExplore} disabled={isThinking || step >= 4} />
           </GeneratedUIContainer>
         )}
 
-        {notesAt(2)}
 
         {step >= 3 && explored && !awaitingPayment && (
           <GeneratedUIContainer>
@@ -320,7 +323,6 @@ export default function PersonaFamily() {
           </>
         )}
 
-        {notesAt(3)}
 
         {step >= 4 && (
           <>
@@ -342,7 +344,6 @@ export default function PersonaFamily() {
           </>
         )}
 
-        {notesAt(4)}
 
         {step >= 5 && <MyraBubble>Tomorrow's activity is confirmed for 9 AM.</MyraBubble>}
 
@@ -369,15 +370,13 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(6)}
 
         {step >= 7 && option && (
           <GeneratedUIContainer>
-            <ApprovalSheet option={option} actions={actionsFor(option.id)} traveller={traveller} onApprove={handleApprove} onCancel={() => goto(6)} approved={approved} />
+            <ApprovalSheet option={option} actions={actionsFor(option.id)} traveller={traveller} onApprove={handleApprove} onCancel={() => goto(6)} approved={approved || step >= 8} />
           </GeneratedUIContainer>
         )}
 
-        {notesAt(7)}
 
         {step >= 8 && (
           <GeneratedUIContainer>
@@ -385,9 +384,8 @@ export default function PersonaFamily() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(8)}
-        {notesAt(9)}
 
+        {renderNotes()}
         {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 

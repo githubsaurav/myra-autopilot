@@ -1,3 +1,4 @@
+import { emptyConversation, type SavedConversation } from "@/lib/travelAssistant";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoTrip, DestinationOption, InspectorSnapshot, JourneyStage, PersonaId, TravellerProfile } from "@/types/demo";
 import { travellers as defaultTravellers } from "@/data/demoTraveller";
@@ -15,6 +16,7 @@ const tripBuilders: Record<PersonaId, (dest: DestinationOption) => DemoTrip> = {
 };
 
 interface PersistedState {
+  conversations: Record<PersonaId, SavedConversation>;
   activePersonaId: PersonaId | null;
   personaStep: Record<PersonaId, number>;
   personaStage: Record<PersonaId, JourneyStage>;
@@ -67,6 +69,7 @@ const personaSeed: Record<PersonaId, PersonaSeed> = {
 };
 
 const initialState: PersistedState = {
+  conversations: { family: emptyConversation(), solo: emptyConversation(), group: emptyConversation() },
   activePersonaId: null,
   personaStep: { family: personaSeed.family.step, solo: personaSeed.solo.step, group: personaSeed.group.step },
   personaStage: { family: personaSeed.family.stage, solo: personaSeed.solo.stage, group: personaSeed.group.stage },
@@ -93,6 +96,7 @@ function loadState(): PersistedState {
     return {
       ...initialState,
       ...parsed,
+      conversations: { family: { ...emptyConversation(), ...parsed.conversations?.family }, solo: { ...emptyConversation(), ...parsed.conversations?.solo }, group: { ...emptyConversation(), ...parsed.conversations?.group } },
       personaStep: { ...initialState.personaStep, ...parsed.personaStep },
       personaStage: { ...initialState.personaStage, ...parsed.personaStage },
       trips: { ...initialState.trips, ...parsed.trips },
@@ -109,6 +113,7 @@ function loadState(): PersistedState {
 }
 
 interface DemoStoreValue extends PersistedState {
+  updateConversation: (id: PersonaId, update: (current: SavedConversation) => SavedConversation) => void;
   setActivePersona: (id: PersonaId | null) => void;
   setPersonaStep: (id: PersonaId, step: number) => void;
   setPersonaStage: (id: PersonaId, stage: JourneyStage) => void;
@@ -138,6 +143,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       // demo persistence only — safe to ignore if storage is unavailable
     }
   }, [state]);
+
+  const updateConversation = useCallback((id: PersonaId, update: (current: SavedConversation) => SavedConversation) => setState(s => ({ ...s, conversations: { ...s.conversations, [id]: update(s.conversations[id]) } })), []);
 
   const setActivePersona = useCallback((id: PersonaId | null) => setState((s) => ({ ...s, activePersonaId: id })), []);
 
@@ -223,6 +230,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         const seed = personaSeed[id];
         return {
           ...s,
+          conversations: { ...s.conversations, [id]: emptyConversation() },
           personaStep: { ...s.personaStep, [id]: seed.step },
           personaStage: { ...s.personaStage, [id]: seed.stage },
           trips: { ...s.trips, [id]: seed.trip },
@@ -245,6 +253,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<DemoStoreValue>(
     () => ({
       ...state,
+      updateConversation,
       setActivePersona,
       setPersonaStep,
       setPersonaStage,
@@ -263,6 +272,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     }),
     [
       state,
+      updateConversation,
       setActivePersona,
       setPersonaStep,
       setPersonaStage,

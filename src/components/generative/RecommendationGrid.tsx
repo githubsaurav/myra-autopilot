@@ -15,7 +15,7 @@ export function RecommendationGrid({
   addedLabel?: string;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="local-recommendations grid gap-3">
       {options.map((o) => (
         <Card key={o.id} className={o.recommended ? "border-[var(--color-red)]/25 bg-[var(--color-red-soft)]" : ""}>
           <div className="flex items-start justify-between gap-2">
@@ -42,7 +42,7 @@ export function RecommendationGrid({
           <button
             type="button"
             onClick={() => onAdd(o)}
-            disabled={addedId === o.id}
+            disabled={addedId === o.id || !o.availableNow}
             className={`mt-3 w-full rounded-lg py-2 text-xs font-bold transition ${
               addedId === o.id
                 ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
@@ -51,7 +51,7 @@ export function RecommendationGrid({
                   : "border border-[var(--color-border)] bg-white text-[var(--color-ink)]"
             }`}
           >
-            {addedId === o.id ? addedLabel : "Add to Trip"}
+            {addedId === o.id ? addedLabel : !o.availableNow ? "Currently unavailable" : addedId ? "Choose this instead" : "Add to Trip"}
           </button>
         </Card>
       ))}

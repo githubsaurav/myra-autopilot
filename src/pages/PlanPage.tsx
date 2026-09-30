@@ -12,6 +12,7 @@ const categoryMeta: Record<string, { icon: LucideIcon; label: string }> = {
   logistics: { icon: Plane, label: "Logistics" },
   food: { icon: UtensilsCrossed, label: "Food" },
   sightseeing: { icon: Camera, label: "Sightseeing" },
+  "myra-local": { icon: Sparkles, label: "Local experience" },
   activity: { icon: Sparkles, label: "Activity" },
   free: { icon: Coffee, label: "Free time" },
 };

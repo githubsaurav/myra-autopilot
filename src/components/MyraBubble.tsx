@@ -1,31 +1,14 @@
-import { Sparkles } from "lucide-react";
+import { Check, Copy, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-/** Reveals a Myra reply word by word on mount, to read as live typing rather than a static block appearing. */
-function TypingWords({ text }: { text: string }) {
-  const words = text.length ? text.split(" ") : [];
-  const [count, setCount] = useState(Math.min(1, words.length));
-
-  useEffect(() => {
-    setCount(Math.min(1, words.length));
-    if (words.length <= 1) return;
-    const id = setInterval(() => {
-      setCount((c) => {
-        if (c >= words.length) {
-          clearInterval(id);
-          return c;
-        }
-        return c + 1;
-      });
-    }, 55);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
-
-  return <>{words.slice(0, count).join(" ")}</>;
-}
-
 export function MyraBubble({ children, from = "myra" }: { children: ReactNode; from?: "user" | "myra" }) {
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1600);
+    return () => clearTimeout(timer);
+  }, [copied]);
   if (from === "user") {
     return (
       <div className="chat-message chat-message-user">
@@ -42,7 +25,12 @@ export function MyraBubble({ children, from = "myra" }: { children: ReactNode; f
       </span>
       <div className="chat-myra-bubble">
         <span className="chat-speaker">Myra <span>YOUR TRAVEL COMPANION</span></span>
-        {typeof children === "string" ? <TypingWords text={children} /> : children}
+        <div className="reply-text">{children}</div>
+        {typeof children === "string" && <button className="copy-reply" aria-label={copied ? "Reply copied" : "Copy reply"} onClick={async () => {
+          try { await navigator.clipboard.writeText(children); setCopied(true); setCopyError(false); }
+          catch { setCopyError(true); }
+        }}>{copied ? <Check size={11} /> : <Copy size={11} />}{copied ? "Copied" : "Copy"}</button>}
+        {copyError && <span role="status" className="copy-error">Select the reply text to copy it.</span>}
       </div>
     </div>
   );

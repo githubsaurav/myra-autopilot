@@ -1,3 +1,4 @@
+import { useTravelChat } from "@/components/myra/useTravelChat";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MyraBubble } from "@/components/MyraBubble";
@@ -24,9 +25,8 @@ import { useDemoStore } from "@/state/useDemoStore";
 
 const persona = personas.find((p) => p.id === "group")!;
 const MID_PROMPT = "what should we do?";
-const FREEFORM_ACK = "Got it — I'll factor that in for the group.";
 const ESCALATE_USER_TEXT = "Can someone from your team help us directly?";
-const ESCALATE_REPLY = "I've flagged this for a human travel expert — they'll join here within a few minutes. I'll keep coordinating with the group in the meantime.";
+const ESCALATE_REPLY = "This demo can show the handoff, but it does not contact a real travel expert. In a live product, your trip context and this conversation would be shared with support.";
 
 /** Shows a friend's own chat message (not the traveller's, not Myra's) — this is a group chat, not a 1:1. */
 function MemberBubble({ name, initial, children }: { name: string; initial: string; children: string }) {
@@ -79,12 +79,10 @@ export default function PersonaGroup() {
   const step = personaStep;
   const [showCompare, setShowCompare] = useState(false);
   const [approved, setApproved] = useState(false);
-  const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
-  const [sentMid, setSentMid] = useState(MID_PROMPT);
-  const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
+  const { sentIntent, setSentIntent, sentMid, setSentMid, notes, setNotes, replyTo } = useTravelChat("group", persona.samplePrompt, MID_PROMPT);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const { isThinking, thinkingLabel, runWithThinking } = useThinking();
+  const { isThinking, thinkingLabel, runWithThinking, cancelThinking } = useThinking();
   const navigate = useNavigate();
 
   const explored = destinationOptions.group.find((d) => d.id === exploredDestinationId);
@@ -170,6 +168,7 @@ export default function PersonaGroup() {
   }
 
   function handleExplore(id: string) {
+    if (step >= 5 || isThinking) return;
     setExploredDestination("group", id);
     setAwaitingPayment(false);
     goto(3);
@@ -192,11 +191,13 @@ export default function PersonaGroup() {
   }
 
   function handleApplyOption(id: string) {
+    if (step >= 9) return;
     selectRecoveryOption("group", id);
     goto(8);
   }
 
   function handleApprove() {
+    if (step >= 9) return;
     mutateTrip("group", (t) => {
       const chosen = splitEvent?.options.find((o) => o.id === recoverySelection);
       if (!chosen) return t;
@@ -215,6 +216,11 @@ export default function PersonaGroup() {
   }
 
   function handleComposerSend(text: string) {
+    const answer = step === 0 ? null : replyTo(text);
+    if (answer) {
+      runWithThinking(() => setNotes(n => [...n, { id: crypto.randomUUID(), user: text, reply: answer, atStep: step }]), "Checking your trip details");
+      return;
+    }
     if (step === 0) {
       setSentIntent(text);
       runWithThinking(() => goto(1), "Myra is understanding the group's trip");
@@ -223,11 +229,12 @@ export default function PersonaGroup() {
       runWithThinking(() => goto(7), "Myra is working out split-plan options");
     } else {
       const atStep = step;
-      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]), "Myra is noting that down");
+      runWithThinking(() => setNotes((n) => [...n, { id: crypto.randomUUID(), user: text, reply: "I can help with your itinerary, budget, bookings, weather, and preferences in this guided demo. Try a suggested question below, or use a trip card to make a change.", atStep }]), "Myra is noting that down");
     }
   }
 
   function handleRestart() {
+    cancelThinking();
     resetPersona("group");
     setShowCompare(false);
     setApproved(false);
@@ -241,16 +248,15 @@ export default function PersonaGroup() {
   function handleEscalate() {
     const atStep = step;
     runWithThinking(
-      () => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
-      "Myra is connecting you with a human expert"
+      () => setNotes((n) => [...n, { id: crypto.randomUUID(), user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
+      "Showing the support handoff"
     );
   }
 
-  function notesAt(atStep: number) {
+  function renderNotes() {
     return notes
-      .filter((n) => n.atStep === atStep)
-      .map((n, i) => (
-        <Fragment key={`note-${atStep}-${i}`}>
+      .map((n) => (
+        <Fragment key={n.id}>
           <MyraBubble from="user">{n.user}</MyraBubble>
           <MyraBubble>{n.reply}</MyraBubble>
         </Fragment>
@@ -277,7 +283,6 @@ export default function PersonaGroup() {
         </span>
       </div>
       <ConversationThread>
-        {notesAt(0)}
 
         {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && <MyraBubble>Got it — I'll pull in what everyone else told me too, not just your input.</MyraBubble>}
@@ -288,7 +293,6 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(1)}
 
         {step >= 2 && (
           <GeneratedUIContainer>
@@ -303,11 +307,10 @@ export default function PersonaGroup() {
 
         {step >= 2 && (
           <GeneratedUIContainer delay={0.15}>
-            <DestinationGrid options={destinationOptions.group} onExplore={handleExplore} />
+            <DestinationGrid options={destinationOptions.group} onExplore={handleExplore} disabled={isThinking || step >= 5} />
           </GeneratedUIContainer>
         )}
 
-        {notesAt(2)}
 
         {step >= 3 && explored && stayVote.length > 0 && (
           <>
@@ -319,7 +322,6 @@ export default function PersonaGroup() {
           </>
         )}
 
-        {notesAt(3)}
 
         {step >= 4 && explored && !awaitingPayment && (
           <GeneratedUIContainer>
@@ -362,7 +364,6 @@ export default function PersonaGroup() {
           </>
         )}
 
-        {notesAt(4)}
 
         {step >= 5 && (
           <>
@@ -384,7 +385,6 @@ export default function PersonaGroup() {
           </>
         )}
 
-        {notesAt(5)}
 
         {step >= 6 && splitEvent && <MyraBubble>Heads up — tonight's plans are splitting between the group.</MyraBubble>}
 
@@ -409,15 +409,13 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(7)}
 
         {step >= 8 && option && (
           <GeneratedUIContainer>
-            <ApprovalSheet option={option} actions={actionsFor(option.id)} traveller={traveller} onApprove={handleApprove} onCancel={() => goto(7)} approved={approved} />
+            <ApprovalSheet option={option} actions={actionsFor(option.id)} traveller={traveller} onApprove={handleApprove} onCancel={() => goto(7)} approved={approved || step >= 9} />
           </GeneratedUIContainer>
         )}
 
-        {notesAt(8)}
 
         {step >= 9 && (
           <GeneratedUIContainer>
@@ -425,9 +423,8 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
-        {notesAt(9)}
-        {notesAt(10)}
 
+        {renderNotes()}
         {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 

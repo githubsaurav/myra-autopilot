@@ -1,20 +1,25 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-/** Simulates Myra "thinking" for ~3s before revealing the scripted response — long enough to actually read
- *  a stage-appropriate label (e.g. "Myra is curating for you...") instead of a generic "typing" indicator. */
+/** A short, cancellable transition; changing journeys cannot complete an old action. */
 export function useThinking() {
   const [isThinking, setIsThinking] = useState(false);
-  const [thinkingLabel, setThinkingLabel] = useState("Myra is typing");
-
-  function runWithThinking(after: () => void, label = "Myra is typing") {
+  const [thinkingLabel, setThinkingLabel] = useState("Myra is thinking");
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  function cancelThinking() {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setIsThinking(false);
+  }
+  function runWithThinking(after: () => void, label = "Myra is thinking") {
+    if (timer.current) clearTimeout(timer.current);
     setThinkingLabel(label);
     setIsThinking(true);
-    const delay = 2800 + Math.random() * 400;
-    setTimeout(() => {
+    timer.current = setTimeout(() => {
+      timer.current = null;
       setIsThinking(false);
       after();
-    }, delay);
+    }, 700);
   }
-
-  return { isThinking, thinkingLabel, runWithThinking };
+  return { isThinking, thinkingLabel, runWithThinking, cancelThinking };
 }
