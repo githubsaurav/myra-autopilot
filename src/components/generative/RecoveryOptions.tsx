@@ -74,7 +74,7 @@ export function RecoveryOptions({
             <button
               type="button"
               onClick={() => onApply(opt.id)}
-              className={`mt-3 w-full rounded-lg py-2.5 text-xs font-bold transition ${
+              className={`mt-2.5 w-full rounded-lg py-2 text-xs font-bold transition ${
                 opt.recommended ? "bg-[var(--color-red)] text-white" : "border border-[var(--color-border)] bg-white text-[var(--color-ink)]"
               }`}
             >

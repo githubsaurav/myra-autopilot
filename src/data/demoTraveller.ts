@@ -1,6 +1,10 @@
 import type { PersonaId, TravellerProfile } from "@/types/demo";
 
-/** Synthetic travellers — masked, never real PII. */
+/**
+ * Synthetic traveller — masked, never real PII. One MakeMyTrip account, "Aarav",
+ * with three different trips in progress — the same identity every trip folder
+ * belongs to, just different companions and context per trip.
+ */
 export const travellers: Record<PersonaId, TravellerProfile> = {
   family: {
     id: "traveller-aarav",
@@ -16,8 +20,8 @@ export const travellers: Record<PersonaId, TravellerProfile> = {
     memoryEnabled: true,
   },
   solo: {
-    id: "traveller-meera",
-    displayName: "Meera",
+    id: "traveller-aarav",
+    displayName: "Aarav",
     travelPace: "relaxed",
     foodPreferences: ["Flexible, loves local food"],
     companionNeeds: ["Travelling solo — safety check-ins matter"],
@@ -29,8 +33,8 @@ export const travellers: Record<PersonaId, TravellerProfile> = {
     memoryEnabled: true,
   },
   group: {
-    id: "traveller-zara",
-    displayName: "Zara",
+    id: "traveller-aarav",
+    displayName: "Aarav",
     travelPace: "packed",
     foodPreferences: ["Mixed group — no restrictions"],
     companionNeeds: ["Planning for 4 friends with different budgets"],

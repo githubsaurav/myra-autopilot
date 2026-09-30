@@ -81,6 +81,10 @@ export function AutopilotInspector() {
               <p className="text-sm text-[var(--color-ink)]">{snapshot.action}</p>
             </Section>
 
+            <Section label="Powered by">
+              <p className="text-sm font-semibold text-[var(--color-ink)]">{snapshot.poweredBy}</p>
+            </Section>
+
             <Section label="State change">
               <p className="text-sm font-semibold text-[var(--color-navy)]">{snapshot.stateChange}</p>
             </Section>

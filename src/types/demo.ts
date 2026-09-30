@@ -157,6 +157,8 @@ export interface PersonaMeta {
   name: string;
   tagline: string;
   description: string;
+  /** Short capability label shown as a banner inside the Myra chat, e.g. "Trip Planning + In-Trip Assistance". */
+  capabilityBadge: string;
   language: Language;
   languageLabel: string;
   samplePrompt: string;
@@ -175,6 +177,8 @@ export interface InspectorSnapshot {
   capability: string;
   /** Short, step-specific headline for the "agent backend" feed, e.g. "NLU: extracting duration, budget, visa & food constraints". */
   backendAction: string;
+  /** Which technology partner this backend step demonstrates — shown as a small badge next to the step. */
+  poweredBy: "OpenAI" | "Google Cloud" | "Mastercard";
   scenarioName: string;
   scenarioTag: string;
   userState: string;

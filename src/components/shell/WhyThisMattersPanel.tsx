@@ -32,9 +32,13 @@ export function WhyThisMattersPanel() {
             {history.map((entry, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
+                initial={
+                  i === history.length - 1
+                    ? { opacity: 0, y: 8, scale: 0.96, boxShadow: "0 0 0 6px rgba(225,45,45,0.28)" }
+                    : { opacity: 0, y: 8 }
+                }
+                animate={{ opacity: 1, y: 0, scale: 1, boxShadow: "0 0 0 0px rgba(225,45,45,0)" }}
+                transition={{ duration: 0.25, boxShadow: { duration: 1.4, ease: "easeOut" } }}
                 className={`rounded-xl border p-3 ${
                   i === history.length - 1 ? "border-[var(--color-red)]/25 bg-[var(--color-red-soft)]" : "border-[var(--color-border)] bg-[var(--color-bg)]"
                 }`}

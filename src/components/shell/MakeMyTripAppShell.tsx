@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { MapPinned, CalendarDays, Sparkles, Ticket, User, Radar, RotateCcw } from "lucide-react";
+import { MapPinned, CalendarDays, Sparkles, Ticket, User, Radar, RotateCcw, Bell, Heart } from "lucide-react";
 import { useDemoStore } from "@/state/useDemoStore";
 import { TopNav } from "@/components/shell/TopNav";
 
@@ -13,10 +14,11 @@ const tabs = [
 
 export function MakeMyTripAppShell() {
   const { toggleInspector, resetDemo } = useDemoStore();
+  const [bellOpen, setBellOpen] = useState(false);
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-[var(--color-bg)]">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2.5">
+      <header className="relative flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2.5">
         <div className="flex items-center gap-3">
           <Link to="/" title="Back to MakeMyTrip home">
             <img src="/makemytrip-logo.svg" alt="MakeMyTrip" className="h-6 w-auto" />
@@ -24,23 +26,49 @@ export function MakeMyTripAppShell() {
           <TopNav />
         </div>
         <div className="flex items-center gap-1.5">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setBellOpen((v) => !v)}
+              className="relative flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-ink)] hover:bg-black/5"
+              aria-label="Proactive notifications"
+              title="Proactive notifications"
+            >
+              <Bell size={15} />
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--color-red)]" />
+            </button>
+            {bellOpen && (
+              <div className="absolute right-0 top-10 z-50 w-[280px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5 text-left shadow-[var(--shadow-pop)]">
+                <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-slate)]">
+                  <Heart size={11} className="text-[var(--color-red)]" /> From Myra
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-[var(--color-ink)]">
+                  Hope Vietnam's been amazing so far! I noticed tomorrow's weather might affect your Day 6 boat tour — want me to look at backup plans?
+                </p>
+                <p className="mt-2.5 border-t border-[var(--color-border)] pt-2 text-[10px] font-semibold text-[var(--color-slate)]">
+                  ✓ Sent to your phone
+                </p>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={toggleInspector}
-            className="flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-ink)] hover:bg-black/5"
+            className="flex items-center gap-1.5 rounded-full bg-[var(--color-navy-soft)] px-3 py-1.5 text-xs font-bold text-[var(--color-navy)] hover:opacity-80"
             title="See what Myra is doing behind the scenes"
           >
-            <Radar size={13} className="text-[var(--color-navy)]" />
+            <Radar size={13} />
             Agent Insights
           </button>
           <button
             type="button"
             onClick={resetDemo}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-slate)] hover:bg-black/5"
+            className="flex items-center gap-1.5 rounded-full bg-[var(--color-red-soft)] px-3 py-1.5 text-xs font-bold text-[var(--color-red)] hover:opacity-80"
             aria-label="Reset demo"
-            title="Reset demo"
+            title="Reset demo — back to the starting scenarios"
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={13} />
+            Reset demo
           </button>
         </div>
       </header>

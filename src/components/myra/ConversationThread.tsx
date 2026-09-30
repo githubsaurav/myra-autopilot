@@ -9,7 +9,7 @@ export function ConversationThread({ children }: { children: ReactNode }) {
   });
 
   return (
-    <div ref={ref} className="app-scroll flex-1 space-y-4 overflow-y-auto px-5 py-5">
+    <div ref={ref} className="app-scroll flex-1 space-y-3 overflow-y-auto px-4 py-3">
       {children}
     </div>
   );

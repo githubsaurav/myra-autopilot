@@ -1,5 +1,6 @@
 import { Sparkles } from "lucide-react";
 import { MyraHeader } from "@/components/myra/MyraHeader";
+import { CapabilityBanner } from "@/components/myra/CapabilityBanner";
 import { PersonaSelector } from "@/components/shell/PersonaSelector";
 import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
@@ -26,8 +27,8 @@ export default function MyraWorkspacePage() {
             <Sparkles size={20} />
           </span>
           <div>
-            <p className="text-sm font-bold text-[var(--color-ink)]">Pick a scenario to begin</p>
-            <p className="mt-1 text-xs text-[var(--color-slate)]">Myra activates for that traveller — trip, bookings and profile switch with it.</p>
+            <p className="text-sm font-bold text-[var(--color-ink)]">Pick a trip to continue</p>
+            <p className="mt-1 text-xs text-[var(--color-slate)]">Same account, three trip folders — Myra activates with that trip's context, and your trip/bookings/profile switch with it.</p>
           </div>
           <PersonaSelector value={null} onChange={setActivePersona} />
           <div className="w-full space-y-2 pt-2">
@@ -63,10 +64,11 @@ export default function MyraWorkspacePage() {
   return (
     <div className="flex h-full flex-col">
       <MyraHeader
-        tripLabel={trip ? `${persona.name} · Day ${trip.dayNumber} of ${trip.totalDays}` : persona.tagline}
+        tripLabel={trip ? `${trip.destination} · Day ${trip.dayNumber} of ${trip.totalDays}` : persona.tagline}
         persona={persona}
         onChangePersona={setActivePersona}
       />
+      <CapabilityBanner label={persona.capabilityBadge} />
       <ActiveScenario key={activePersonaId} />
     </div>
   );

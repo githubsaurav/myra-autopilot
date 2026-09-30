@@ -34,19 +34,29 @@ const intentFacts = [
 ];
 
 export default function PersonaSolo() {
-  const { personaStep, setPersonaStep, setPersonaStage, trip, createTrip, addLearnedPreference, addInspectorEntry, resetPersona } = useDemoStoreShim();
+  const {
+    personaStep,
+    setPersonaStep,
+    setPersonaStage,
+    trip,
+    createTrip,
+    addLearnedPreference,
+    exploredDestinationId,
+    setExploredDestination,
+    addInspectorEntry,
+    resetPersona,
+  } = useDemoStoreShim();
   const step = personaStep;
-  const [exploredId, setExploredId] = useState<string | null>(null);
   const [added, setAdded] = useState<ContextualOption | null>(null);
   const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
   const [sentMid, setSentMid] = useState(MID_PROMPT);
   const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const { isThinking, runWithThinking } = useThinking();
+  const { isThinking, thinkingLabel, runWithThinking } = useThinking();
   const navigate = useNavigate();
 
-  const explored = destinationOptions.solo.find((d) => d.id === exploredId);
+  const explored = destinationOptions.solo.find((d) => d.id === exploredDestinationId);
   const dependency = explored ? soloDependencyByDestination[explored.id] : null;
   const hyperLocalOptions = explored ? soloHyperLocalOptionsByDestination[explored.id] ?? [] : [];
 
@@ -71,18 +81,26 @@ export default function PersonaSolo() {
                     : "Itinerary updated with a genuinely local experience",
       backendAction:
         step === 1
-          ? "NLU: extracting solo/offbeat/duration/budget signals"
+          ? "Understanding what kind of solo trip you want — offbeat, low-crowd, real local culture"
           : step === 2
-            ? "Ranking destination inventory by crowd + culture fit"
+            ? "Ranking offbeat places by how quiet and culturally deep they are"
             : step === 3
-              ? "Assembling day-by-day itinerary + cost estimate"
+              ? "Curating hyper-local finds and building your day-by-day plan"
               : step === 4
-                ? "Writing booking + itinerary to trip state"
+                ? "Connecting with our local suppliers to lock this in"
                 : step === 5
-                  ? "Polling local conditions feed for this destination"
+                  ? "Checking real-time local conditions at your destination"
                   : step === 6
-                    ? "Matching today's free window to hyper-local inventory"
-                    : "Appending itinerary item, syncing trip state",
+                    ? "Matching this morning's free window to what's genuinely available nearby"
+                    : "Adding this to your plan and syncing everything",
+      poweredBy:
+        step === 1
+          ? "OpenAI"
+          : step === 3
+            ? "Mastercard"
+            : step === 6
+              ? "Mastercard"
+              : "Google Cloud",
       scenarioName: `Solo · Hyper-Local · ${persona.languageLabel}`,
       scenarioTag: "SOLO",
       userState: trip ? `Day ${trip.dayNumber} · ${trip.liveContext.city} · travelling solo` : "No active trip — planning stage",
@@ -102,13 +120,21 @@ export default function PersonaSolo() {
   }
 
   function handleLooksRight() {
-    runWithThinking(() => goto(2));
+    runWithThinking(() => goto(2), "मैं आपके लिए जगहें क्यूरेट कर रही हूं");
   }
 
   function handleExplore(id: string) {
-    setExploredId(id);
+    setExploredDestination("solo", id);
     setAwaitingPayment(false);
-    goto(3);
+    runWithThinking(
+      () =>
+        runWithThinking(
+          () =>
+            runWithThinking(() => goto(3), "यहां के खास लोकल व्यंजन भी ढूंढ रही हूं..."),
+          "ठहरने के अच्छे होमस्टे क्यूरेट कर रही हूं..."
+        ),
+      "इस जगह के बारे में पूरी जानकारी जुटा रही हूं..."
+    );
   }
 
   function handleRequestPayment() {
@@ -131,19 +157,18 @@ export default function PersonaSolo() {
   function handleComposerSend(text: string) {
     if (step === 0) {
       setSentIntent(text);
-      runWithThinking(() => goto(1));
+      runWithThinking(() => goto(1), "मैं आपकी बात समझ रही हूं");
     } else if (step === 5) {
       setSentMid(text);
-      runWithThinking(() => goto(6));
+      runWithThinking(() => goto(6), "मैं आस-पास के विकल्प ढूंढ रही हूं");
     } else {
       const atStep = step;
-      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]));
+      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]), "नोट कर रही हूं");
     }
   }
 
   function handleRestart() {
     resetPersona("solo");
-    setExploredId(null);
     setAdded(null);
     setSentIntent(persona.samplePrompt);
     setSentMid(MID_PROMPT);
@@ -154,7 +179,10 @@ export default function PersonaSolo() {
 
   function handleEscalate() {
     const atStep = step;
-    runWithThinking(() => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]));
+    runWithThinking(
+      () => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
+      "आपको एक ह्यूमन एक्सपर्ट से जोड़ रही हूं"
+    );
   }
 
   function notesAt(atStep: number) {
@@ -189,6 +217,9 @@ export default function PersonaSolo() {
 
         {notesAt(1)}
 
+        {step >= 2 && (
+          <MyraBubble>मैं आपके लिए सबसे ऑफबीट, कम भीड़ वाली और असली लोकल कल्चर वाली जगहें ढूंढ और क्यूरेट कर रही हूं...</MyraBubble>
+        )}
         {step >= 2 && <MyraBubble>ये तीन जगहें फिट बैठती हैं — कोई भी चुनकर पूरा प्लान देखें।</MyraBubble>}
 
         {step >= 2 && (
@@ -199,10 +230,32 @@ export default function PersonaSolo() {
 
         {notesAt(2)}
 
+        {step >= 3 && explored && (
+          <>
+            <MyraBubble>यहां के बेहतरीन होमस्टे और ठहरने के विकल्प देख लिए हैं — लोकल परिवारों के साथ रहने का असली मौका।</MyraBubble>
+            <MyraBubble>यहां के खास लोकल व्यंजन भी नोट कर लिए हैं — जो आपको किसी गाइडबुक में नहीं मिलेंगे।</MyraBubble>
+            <MyraBubble>इस जगह के लिए मैंने कुछ हाइपरलोकल गहने भी क्यूरेट किए हैं — सिर्फ आम गाइडबुक सुझाव नहीं, प्लान में पहले से जोड़े हुए।</MyraBubble>
+          </>
+        )}
+
         {step >= 3 && explored && !awaitingPayment && (
           <GeneratedUIContainer>
             <Card>
               <SectionLabel>{explored.name} · 5 दिन का प्लान</SectionLabel>
+
+              {hyperLocalOptions.length > 0 && (
+                <div className="mb-3 rounded-lg bg-[var(--color-navy-soft)] p-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-navy)]">क्यूरेटेड हाइपरलोकल गहने</p>
+                  <ul className="mt-1 space-y-1">
+                    {hyperLocalOptions.slice(0, 2).map((o) => (
+                      <li key={o.id} className="text-xs text-[var(--color-ink)]">
+                        • {o.title}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <ul className="space-y-1.5 text-sm text-[var(--color-ink)]">
                 <li>दिन 1 — पहुंचना + होमस्टे चेक-इन</li>
                 <li>दिन 2 — साइटसीइंग + सनसेट</li>
@@ -227,6 +280,10 @@ export default function PersonaSolo() {
         )}
 
         {step === 3 && explored && awaitingPayment && (
+          <>
+            <MyraBubble>
+              मैंने होमस्टे और लोकल सप्लायर से यह कीमत पक्की करवा ली है। आपका हमेशा वाला पेमेंट तरीका सेट है — आगे बढ़ें या बदलें?
+            </MyraBubble>
           <GeneratedUIContainer>
             <BookingConsentSheet
               destinationName={explored.name}
@@ -246,6 +303,7 @@ export default function PersonaSolo() {
               }}
             />
           </GeneratedUIContainer>
+          </>
         )}
 
         {notesAt(3)}
@@ -307,7 +365,7 @@ export default function PersonaSolo() {
 
         {notesAt(7)}
 
-        {isThinking && <ThinkingBubble />}
+        {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 
       <ScenarioQuickActions
@@ -334,6 +392,8 @@ function useDemoStoreShim() {
     trip: store.trips.solo,
     createTrip: store.createTrip,
     addLearnedPreference: store.addLearnedPreference,
+    exploredDestinationId: store.exploredDestinationId.solo,
+    setExploredDestination: store.setExploredDestination,
     addInspectorEntry: store.addInspectorEntry,
     resetPersona: store.resetPersona,
   };

@@ -20,21 +20,21 @@ export function DestinationGrid({
         const Icon = d.icon;
         return (
           <Card key={d.id} className={`overflow-hidden p-0 ${d.recommended ? "border-[var(--color-navy)]/30" : ""}`}>
-            <div className="relative flex h-16 items-center justify-center overflow-hidden bg-gradient-to-br from-[var(--color-navy)] via-[#124a8c] to-[#1e6bb8]">
+            <div className="relative flex h-11 items-center justify-center overflow-hidden bg-gradient-to-br from-[var(--color-navy)] via-[#124a8c] to-[#1e6bb8]">
               <div className="pointer-events-none absolute -right-4 -top-6 h-16 w-16 rounded-full bg-white/10" />
-              <Icon size={24} className="text-white/90" strokeWidth={1.75} />
+              <Icon size={18} className="text-white/90" strokeWidth={1.75} />
               {d.recommended && (
-                <span className="absolute right-2 top-2">
+                <span className="absolute right-1.5 top-1.5">
                   <Chip tone="navy">
-                    <Sparkles size={11} /> {recommendedLabel}
+                    <Sparkles size={10} /> {recommendedLabel}
                   </Chip>
                 </span>
               )}
             </div>
-            <div className="p-4">
-              <p className="text-sm font-bold text-[var(--color-ink)]">{d.name}</p>
-              <p className="mt-1 text-lg font-black text-[var(--color-ink)]">₹{d.estCost.toLocaleString("en-IN")}</p>
-              <ul className="mt-2 space-y-1 text-xs text-[var(--color-slate)]">
+            <div className="p-2.5">
+              <p className="text-xs font-bold text-[var(--color-ink)]">{d.name}</p>
+              <p className="mt-0.5 text-sm font-black text-[var(--color-ink)]">₹{d.estCost.toLocaleString("en-IN")}</p>
+              <ul className="mt-1.5 space-y-0.5 text-[10px] leading-snug text-[var(--color-slate)]">
                 <li>Visa: {d.visa}</li>
                 <li>Food: {d.foodFit}</li>
                 <li>Weather: {d.weatherFit}</li>
@@ -43,12 +43,12 @@ export function DestinationGrid({
                   {d.fitLabel}: {d.fitScore}
                 </li>
               </ul>
-              <p className="mt-2 text-xs italic text-[var(--color-slate)]">{d.reason}</p>
-              <div className="mt-3 flex gap-2">
+              <p className="mt-1.5 text-[10px] italic leading-snug text-[var(--color-slate)]">{d.reason}</p>
+              <div className="mt-2 flex gap-2">
                 <button
                   type="button"
                   onClick={() => onExplore(d.id)}
-                  className="flex-1 rounded-lg bg-[var(--color-navy)] py-2 text-xs font-bold text-white"
+                  className="flex-1 rounded-lg bg-[var(--color-navy)] py-1.5 text-[11px] font-bold text-white"
                 >
                   {exploreLabel}
                 </button>

@@ -319,7 +319,7 @@ export const soloHyperLocalOptionsByDestination: Record<string, ContextualOption
 
 /** Group persona: everyone's stated preference, shown during Curation — same across destinations. */
 export const groupMembers: GroupMemberInput[] = [
-  { id: "gm-zara", name: "Zara (you)", initial: "Z", wants: ["Nightlife", "Beaches"], budget: "₹18–22K" },
+  { id: "gm-aarav", name: "Aarav (you)", initial: "A", wants: ["Nightlife", "Beaches"], budget: "₹18–22K" },
   { id: "gm-priya", name: "Priya", initial: "P", wants: ["Budget-conscious", "Beaches"], budget: "₹12–15K" },
   { id: "gm-rohan", name: "Rohan", initial: "R", wants: ["Nightlife", "Adventure"], budget: "₹20–25K" },
   { id: "gm-zoya", name: "Zoya", initial: "Zo", wants: ["Food", "Boutique stays"], budget: "₹18–20K" },
@@ -358,7 +358,7 @@ export const groupSplitEventByDestination: Record<string, DisruptionEvent> = {
       {
         id: "A",
         title: "Split the group — shack crew + early-return crew",
-        description: "Rohan & Zoya stay at the shack with a later cab back; Priya & Zara head back now and rest before the transfer.",
+        description: "Rohan & Zoya stay at the shack with a later cab back; Priya & Aarav head back now and rest before the transfer.",
         affectedBookings: ["bk-g-villa"],
         extraCost: 400,
         refundImpact: 0,
@@ -399,7 +399,7 @@ export const groupSplitEventByDestination: Record<string, DisruptionEvent> = {
       {
         id: "A",
         title: "Split the group — dawn rafting crew + rest crew",
-        description: "Rohan & Zoya take the dawn rafting slot; Priya & Zara sleep in and join for the market walk after.",
+        description: "Rohan & Zoya take the dawn rafting slot; Priya & Aarav sleep in and join for the market walk after.",
         affectedBookings: ["bk-g-villa"],
         extraCost: 300,
         refundImpact: 0,
@@ -440,7 +440,7 @@ export const groupSplitEventByDestination: Record<string, DisruptionEvent> = {
       {
         id: "A",
         title: "Split the group — trek crew + spa crew",
-        description: "Rohan & Zoya take the sunrise plantation trek; Priya & Zara sleep in and start with the spa instead.",
+        description: "Rohan & Zoya take the sunrise plantation trek; Priya & Aarav sleep in and start with the spa instead.",
         affectedBookings: ["bk-g-villa"],
         extraCost: 350,
         refundImpact: 0,

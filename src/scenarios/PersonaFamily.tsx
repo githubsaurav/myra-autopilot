@@ -54,11 +54,12 @@ export default function PersonaFamily() {
     mutateTrip,
     recoverySelection,
     selectRecoveryOption,
+    exploredDestinationId,
+    setExploredDestination,
     addInspectorEntry,
     resetPersona,
   } = useDemoStoreShim();
   const step = personaStep;
-  const [exploredId, setExploredId] = useState<string | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [approved, setApproved] = useState(false);
   const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
@@ -66,7 +67,7 @@ export default function PersonaFamily() {
   const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const { isThinking, runWithThinking } = useThinking();
+  const { isThinking, thinkingLabel, runWithThinking } = useThinking();
   const navigate = useNavigate();
 
   const option = familyWeatherDisruption.options.find((o) => o.id === recoverySelection) ?? null;
@@ -96,22 +97,32 @@ export default function PersonaFamily() {
                         : "Trip fully updated end to end",
       backendAction:
         step === 1
-          ? "NLU: extracting duration, budget, visa & food constraints"
+          ? "Understanding what you and your parents need — budget, dates, food, visa comfort"
           : step === 2
-            ? "Ranking destination inventory against constraints"
+            ? "Comparing destinations against your budget and preferences"
             : step === 3
-              ? "Assembling day-by-day itinerary + cost estimate"
+              ? "Putting together a day-by-day plan and working out the cost"
               : step === 4
-                ? "Writing booking + itinerary to trip state"
+                ? "Connecting with our flight & hotel suppliers to lock this in"
                 : step === 5
-                  ? "Cross-checking weather feed against active bookings"
+                  ? "Keeping an eye on the weather so your trip isn't caught off guard"
                   : step === 6
-                    ? "Generating recovery options within spend/refund rules"
+                    ? "Working out backup plans that respect your budget and refund rules"
                     : step === 7
-                      ? "Validating against spend limit + refundable-only rule"
+                      ? "Double-checking this stays within your spend limit and refund rules before touching anything"
                       : step === 8
-                        ? "Mutating bookings + itinerary, notifying co-travellers"
-                        : "Sync complete",
+                        ? "Updating your bookings and letting your parents know what's changed"
+                        : "Everything's back in sync",
+      poweredBy:
+        step === 1
+          ? "OpenAI"
+          : step === 2
+            ? "Mastercard"
+            : step === 3
+              ? "OpenAI"
+              : step === 6
+                ? "OpenAI"
+                : "Google Cloud",
       scenarioName: `Family Trip · ${persona.languageLabel}`,
       scenarioTag: "FAMILY",
       userState: trip ? `Day ${trip.dayNumber} · ${trip.liveContext.city} · travelling with parents` : "No active trip — planning stage",
@@ -132,11 +143,11 @@ export default function PersonaFamily() {
   }
 
   function handleLooksRight() {
-    runWithThinking(() => goto(2));
+    runWithThinking(() => goto(2), "Myra is comparing destinations for you");
   }
 
   function handleExplore(id: string) {
-    setExploredId(id);
+    setExploredDestination("family", id);
     setAwaitingPayment(false);
     goto(3);
   }
@@ -196,19 +207,18 @@ export default function PersonaFamily() {
   function handleComposerSend(text: string) {
     if (step === 0) {
       setSentIntent(text);
-      runWithThinking(() => goto(1));
+      runWithThinking(() => goto(1), "Myra is understanding your trip");
     } else if (step === 5) {
       setSentMid(text);
-      runWithThinking(() => goto(6));
+      runWithThinking(() => goto(6), "Myra is working out backup plans for you");
     } else {
       const atStep = step;
-      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]));
+      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]), "Myra is noting that down");
     }
   }
 
   function handleRestart() {
     resetPersona("family");
-    setExploredId(null);
     setShowCompare(false);
     setApproved(false);
     setSentIntent(persona.samplePrompt);
@@ -220,10 +230,13 @@ export default function PersonaFamily() {
 
   function handleEscalate() {
     const atStep = step;
-    runWithThinking(() => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]));
+    runWithThinking(
+      () => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
+      "Myra is connecting you with a human expert"
+    );
   }
 
-  const explored = destinationOptions.family.find((d) => d.id === exploredId);
+  const explored = destinationOptions.family.find((d) => d.id === exploredDestinationId);
 
   function notesAt(atStep: number) {
     return notes
@@ -291,15 +304,20 @@ export default function PersonaFamily() {
         )}
 
         {step === 3 && explored && awaitingPayment && (
-          <GeneratedUIContainer>
-            <BookingConsentSheet
-              destinationName={explored.name}
-              amount={explored.estCost}
-              onApprove={handleApprovePayment}
-              onCancel={() => setAwaitingPayment(false)}
-              approved={paymentApproved}
-            />
-          </GeneratedUIContainer>
+          <>
+            <MyraBubble>
+              I've checked with our flight and hotel suppliers and locked in this price. You've got your usual payment method set — want to go ahead, or change it?
+            </MyraBubble>
+            <GeneratedUIContainer>
+              <BookingConsentSheet
+                destinationName={explored.name}
+                amount={explored.estCost}
+                onApprove={handleApprovePayment}
+                onCancel={() => setAwaitingPayment(false)}
+                approved={paymentApproved}
+              />
+            </GeneratedUIContainer>
+          </>
         )}
 
         {notesAt(3)}
@@ -370,7 +388,7 @@ export default function PersonaFamily() {
         {notesAt(8)}
         {notesAt(9)}
 
-        {isThinking && <ThinkingBubble />}
+        {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 
       <ScenarioQuickActions onRestart={handleRestart} onEscalate={handleEscalate} />
@@ -396,6 +414,8 @@ function useDemoStoreShim() {
     mutateTrip: store.mutateTrip,
     recoverySelection: store.recoverySelection.family,
     selectRecoveryOption: store.selectRecoveryOption,
+    exploredDestinationId: store.exploredDestinationId.family,
+    setExploredDestination: store.setExploredDestination,
     addInspectorEntry: store.addInspectorEntry,
     resetPersona: store.resetPersona,
   };

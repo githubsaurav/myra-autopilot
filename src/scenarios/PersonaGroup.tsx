@@ -28,6 +28,21 @@ const FREEFORM_ACK = "Got it — I'll factor that in for the group.";
 const ESCALATE_USER_TEXT = "Can someone from your team help us directly?";
 const ESCALATE_REPLY = "I've flagged this for a human travel expert — they'll join here within a few minutes. I'll keep coordinating with the group in the meantime.";
 
+/** Shows a friend's own chat message (not the traveller's, not Myra's) — this is a group chat, not a 1:1. */
+function MemberBubble({ name, initial, children }: { name: string; initial: string; children: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black/[0.08] text-[10px] font-bold text-[var(--color-ink)]">
+        {initial}
+      </span>
+      <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-[var(--color-border)] bg-white px-3.5 py-2.5 text-sm text-[var(--color-ink)]">
+        <p className="mb-0.5 text-[10px] font-bold text-[var(--color-slate)]">{name}</p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 const intentFacts = [
   { label: "Group size", value: "4 friends" },
   { label: "Destination", value: "Flexible" },
@@ -56,11 +71,12 @@ export default function PersonaGroup() {
     selectRecoveryOption,
     groupVoteFinalized,
     finalizeGroupVote,
+    exploredDestinationId,
+    setExploredDestination,
     addInspectorEntry,
     resetPersona,
   } = useDemoStoreShim();
   const step = personaStep;
-  const [exploredId, setExploredId] = useState<string | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const [approved, setApproved] = useState(false);
   const [sentIntent, setSentIntent] = useState(persona.samplePrompt);
@@ -68,10 +84,10 @@ export default function PersonaGroup() {
   const [notes, setNotes] = useState<{ user: string; reply: string; atStep: number }[]>([]);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [paymentApproved, setPaymentApproved] = useState(false);
-  const { isThinking, runWithThinking } = useThinking();
+  const { isThinking, thinkingLabel, runWithThinking } = useThinking();
   const navigate = useNavigate();
 
-  const explored = destinationOptions.group.find((d) => d.id === exploredId);
+  const explored = destinationOptions.group.find((d) => d.id === exploredDestinationId);
   const stayVote = explored ? groupStayVoteByDestination[explored.id] ?? [] : [];
   const splitEvent = explored ? groupSplitEventByDestination[explored.id] : null;
   const option = splitEvent?.options.find((o) => o.id === recoverySelection) ?? null;
@@ -104,24 +120,32 @@ export default function PersonaGroup() {
                           : "Trip fully updated end to end",
       backendAction:
         step === 1
-          ? "NLU: extracting group size, budget range, priorities"
+          ? "Understanding the group's trip — size, budget range, what everyone cares about"
           : step === 2
-            ? "Merging 4 traveller-preference records"
+            ? "Pulling together what all 4 of you want into one picture"
             : step === 3
-              ? "Ranking destination inventory against merged preferences"
+              ? "Comparing destinations against everyone's budget and priorities"
               : step === 4
-                ? "Tallying group chat votes on stay options"
+                ? "Counting the group's votes on where to stay"
                 : step === 5
-                  ? "Writing shared booking + split-cost record"
+                  ? "Connecting with our suppliers to lock this in, split 4 ways"
                   : step === 6
-                    ? "Cross-checking tonight's plans against shared itinerary"
+                    ? "Noticing tonight's plans are pulling the group in different directions"
                     : step === 7
-                      ? "Generating split-plan options within shared budget"
+                      ? "Working out split-plan options that keep everyone's shared budget intact"
                       : step === 8
-                        ? "Validating against spend limit + refundable-only rule"
+                        ? "Double-checking this stays within spend limit and refund rules before touching anything"
                         : step === 9
-                          ? "Mutating bookings + itinerary, notifying group chat"
-                          : "Sync complete",
+                          ? "Updating bookings and letting the whole group chat know"
+                          : "Everything's back in sync",
+      poweredBy:
+        step === 1
+          ? "OpenAI"
+          : step === 3
+            ? "Mastercard"
+            : step === 7
+              ? "OpenAI"
+              : "Google Cloud",
       scenarioName: `Group Curation · ${persona.languageLabel}`,
       scenarioTag: "GROUP",
       userState: trip ? `Day ${trip.dayNumber} · ${trip.liveContext.city} · 4 friends travelling` : "No active trip — reconciling group input",
@@ -142,11 +166,11 @@ export default function PersonaGroup() {
   }
 
   function handleLooksRight() {
-    runWithThinking(() => goto(2));
+    runWithThinking(() => goto(2), "Myra is pulling everyone's preferences together");
   }
 
   function handleExplore(id: string) {
-    setExploredId(id);
+    setExploredDestination("group", id);
     setAwaitingPayment(false);
     goto(3);
   }
@@ -193,19 +217,18 @@ export default function PersonaGroup() {
   function handleComposerSend(text: string) {
     if (step === 0) {
       setSentIntent(text);
-      runWithThinking(() => goto(1));
+      runWithThinking(() => goto(1), "Myra is understanding the group's trip");
     } else if (step === 6) {
       setSentMid(text);
-      runWithThinking(() => goto(7));
+      runWithThinking(() => goto(7), "Myra is working out split-plan options");
     } else {
       const atStep = step;
-      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]));
+      runWithThinking(() => setNotes((n) => [...n, { user: text, reply: FREEFORM_ACK, atStep }]), "Myra is noting that down");
     }
   }
 
   function handleRestart() {
     resetPersona("group");
-    setExploredId(null);
     setShowCompare(false);
     setApproved(false);
     setSentIntent(persona.samplePrompt);
@@ -217,7 +240,10 @@ export default function PersonaGroup() {
 
   function handleEscalate() {
     const atStep = step;
-    runWithThinking(() => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]));
+    runWithThinking(
+      () => setNotes((n) => [...n, { user: ESCALATE_USER_TEXT, reply: ESCALATE_REPLY, atStep }]),
+      "Myra is connecting you with a human expert"
+    );
   }
 
   function notesAt(atStep: number) {
@@ -233,6 +259,23 @@ export default function PersonaGroup() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2">
+        <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-slate)]">This trip:</span>
+        <div className="flex items-center -space-x-1.5">
+          {groupMembers.map((m) => (
+            <span
+              key={m.id}
+              title={m.name}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-[var(--color-surface)] bg-[var(--color-navy-soft)] text-[9px] font-bold text-[var(--color-navy)]"
+            >
+              {m.initial}
+            </span>
+          ))}
+        </div>
+        <span className="truncate text-[11px] font-semibold text-[var(--color-ink)]">
+          {groupMembers.map((m) => m.name).join(", ")}
+        </span>
+      </div>
       <ConversationThread>
         {notesAt(0)}
 
@@ -253,6 +296,9 @@ export default function PersonaGroup() {
           </GeneratedUIContainer>
         )}
 
+        {step >= 2 && <MemberBubble name="Priya" initial="P">Let's keep the budget reasonable, I don't want anything too pricey 🙏</MemberBubble>}
+        {step >= 2 && <MemberBubble name="Rohan" initial="R">I'm voting for wherever has the best nightlife tbh</MemberBubble>}
+
         {step >= 2 && <MyraBubble>Here are three destinations that fit — pick any of them to see the full plan.</MyraBubble>}
 
         {step >= 2 && (
@@ -269,6 +315,7 @@ export default function PersonaGroup() {
             <GeneratedUIContainer>
               <GroupVoteCard options={stayVote} onFinalize={handleFinalizeVote} finalized={groupVoteFinalized} />
             </GeneratedUIContainer>
+            <MemberBubble name="Zoya" initial="Zo">Just voted for the villa — closer to the beach clubs, works for me!</MemberBubble>
           </>
         )}
 
@@ -299,15 +346,20 @@ export default function PersonaGroup() {
         )}
 
         {step === 4 && explored && awaitingPayment && (
-          <GeneratedUIContainer>
-            <BookingConsentSheet
-              destinationName={`${explored.name} (your share)`}
-              amount={perPersonAmount}
-              onApprove={handleApprovePayment}
-              onCancel={() => setAwaitingPayment(false)}
-              approved={paymentApproved}
-            />
-          </GeneratedUIContainer>
+          <>
+            <MyraBubble>
+              I've locked this in with our flight & stay suppliers, split 4 ways. You're paying your share with your usual method — want to go ahead, or change it?
+            </MyraBubble>
+            <GeneratedUIContainer>
+              <BookingConsentSheet
+                destinationName={`${explored.name} (your share)`}
+                amount={perPersonAmount}
+                onApprove={handleApprovePayment}
+                onCancel={() => setAwaitingPayment(false)}
+                approved={paymentApproved}
+              />
+            </GeneratedUIContainer>
+          </>
         )}
 
         {notesAt(4)}
@@ -376,7 +428,7 @@ export default function PersonaGroup() {
         {notesAt(9)}
         {notesAt(10)}
 
-        {isThinking && <ThinkingBubble />}
+        {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 
       <ScenarioQuickActions onRestart={handleRestart} onEscalate={handleEscalate} />
@@ -404,6 +456,8 @@ function useDemoStoreShim() {
     selectRecoveryOption: store.selectRecoveryOption,
     groupVoteFinalized: store.groupVoteFinalized,
     finalizeGroupVote: store.finalizeGroupVote,
+    exploredDestinationId: store.exploredDestinationId.group,
+    setExploredDestination: store.setExploredDestination,
     addInspectorEntry: store.addInspectorEntry,
     resetPersona: store.resetPersona,
   };

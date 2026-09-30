@@ -15,14 +15,14 @@ export function GeneratedUIContainer({ children, delay = 0 }: { children: ReactN
   );
 }
 
-export function ThinkingBubble() {
+export function ThinkingBubble({ label = "Myra is typing" }: { label?: string }) {
   return (
     <div className="flex items-center gap-2 pl-0">
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-red-soft)] text-[var(--color-red)]">
         <Sparkles size={13} />
       </span>
       <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5">
-        <span className="text-xs font-medium text-[var(--color-slate)]">Myra is typing</span>
+        <span className="text-xs font-medium text-[var(--color-slate)]">{label}</span>
         <span className="flex items-center gap-1">
           {[0, 1, 2].map((i) => (
             <motion.span
