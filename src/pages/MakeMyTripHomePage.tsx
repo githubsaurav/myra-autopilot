@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowUpRight, ArrowRight, Sparkles, Check, Compass, ShieldCheck, HeartHandshake } from "lucide-react";
+import { ArrowUpRight, ArrowRight, Sparkles, Compass, ShieldCheck, HeartHandshake } from "lucide-react";
+import { MyraPhonePreview } from "@/components/MyraPhonePreview";
 import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
 
@@ -22,12 +23,7 @@ export default function MakeMyTripHomePage() {
             <Link to="/myra" className="primary-cta">Meet your travel companion <ArrowRight size={18} /></Link>
             <div className="hero-note"><ShieldCheck size={15} /> Your preferences. Your approval. Always.</div>
           </div>
-          <div className="landing-art">
-            <img src="/travel-landscape.svg" alt="Illustration of a sailboat among the limestone islands of Vietnam" />
-            <div className="destination-caption"><span>LESS PLANNING. MORE BEING HERE.</span><strong>Somewhere you’ll remember.</strong></div>
-            <div className="floating-message"><span className="myra-avatar"><Sparkles size={19} /></span><div><strong>A little change of plans? I’m on it.</strong><p>Weather shifted. Your trip doesn’t have to.</p><span><Check size={12} /> A backup plan, ready for your approval</span></div></div>
-            <span className="art-coordinate">VIETNAM · 20.9101° N, 107.1839° E</span>
-          </div>
+          <MyraPhonePreview />
         </section>
         <section className="journey-section">
           <div className="section-heading"><div><span className="eyebrow">ONE COMPANION. EVERY KIND OF TRIP.</span><h2>Where shall we begin?</h2></div><span className="demo-tag">Interactive concept · Sample trips</span></div>

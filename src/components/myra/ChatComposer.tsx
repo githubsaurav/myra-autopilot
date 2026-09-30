@@ -1,52 +1,50 @@
-import { useEffect, useState } from "react";
-import { Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUp, Sparkles } from "lucide-react";
 
-export function ChatComposer({
-  prefill,
-  disabled,
-  onSend,
-}: {
+export function ChatComposer({ prefill, disabled, onSend }: {
   prefill: string;
   disabled?: boolean;
   onSend: (text: string) => void;
 }) {
   const [value, setValue] = useState(prefill);
-
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => { setValue(prefill); }, [prefill]);
   useEffect(() => {
-    setValue(prefill);
-  }, [prefill]);
-
+    const input = inputRef.current;
+    if (input) {
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 128)}px`;
+    }
+  }, [value]);
   function handleSend() {
     if (!value.trim() || disabled) return;
-    onSend(value);
+    onSend(value.trim());
+    setValue("");
   }
-
   return (
-    <div className="chat-composer flex items-end gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-      <textarea
-        aria-label="Message Myra"
-        value={value}
-        disabled={disabled}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-          }
-        }}
-        rows={1}
-        className="app-scroll max-h-24 flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none focus:border-[var(--color-navy)] disabled:opacity-60"
-        placeholder="Ask Myra anything about your trip..."
-      />
-      <button
-        type="button"
-        onClick={handleSend}
-        disabled={disabled || !value.trim()}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-red)] text-white transition hover:opacity-90 disabled:opacity-40"
-        aria-label="Send"
-      >
-        <Send size={15} />
-      </button>
+    <div className="composer-area">
+      <div className="chat-composer">
+        <Sparkles className="composer-sparkle" size={18} aria-hidden="true" />
+        <textarea
+          ref={inputRef}
+          aria-label="Message Myra"
+          value={value}
+          disabled={disabled}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          rows={1}
+          placeholder={disabled ? "Choose an option above to continue…" : "A thought, a question, a change of plan…"}
+        />
+        <button type="button" onClick={handleSend} disabled={disabled || !value.trim()} aria-label="Send">
+          <ArrowUp size={20} />
+        </button>
+      </div>
+      <div className="composer-footer"><span>Made for your kind of travel.</span><span>Scripted demo <span aria-hidden="true">·</span> <span className="composer-key-hint">Enter to send</span></span></div>
     </div>
   );
 }

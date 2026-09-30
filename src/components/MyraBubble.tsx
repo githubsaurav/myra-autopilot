@@ -28,19 +28,20 @@ function TypingWords({ text }: { text: string }) {
 export function MyraBubble({ children, from = "myra" }: { children: ReactNode; from?: "user" | "myra" }) {
   if (from === "user") {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[var(--color-navy)] px-3.5 py-2.5 text-sm font-medium text-white">
+      <div className="chat-message chat-message-user">
+        <div className="chat-user-bubble">
           {children}
         </div>
       </div>
     );
   }
   return (
-    <div className="flex items-start gap-2">
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-red-soft)] text-[var(--color-red)]">
+    <div className="chat-message chat-message-myra">
+      <span className="chat-avatar">
         <Sparkles size={13} />
       </span>
-      <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-sm text-[var(--color-ink)]">
+      <div className="chat-myra-bubble">
+        <span className="chat-speaker">Myra <span>YOUR TRAVEL COMPANION</span></span>
         {typeof children === "string" ? <TypingWords text={children} /> : children}
       </div>
     </div>

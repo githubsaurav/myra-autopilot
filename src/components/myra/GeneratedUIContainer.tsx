@@ -8,7 +8,7 @@ export function GeneratedUIContainer({ children, delay = 0 }: { children: ReactN
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut", delay }}
-      className="pl-8"
+      className="generated-card"
     >
       {children}
     </motion.div>
@@ -17,7 +17,7 @@ export function GeneratedUIContainer({ children, delay = 0 }: { children: ReactN
 
 export function ThinkingBubble({ label = "Myra is typing" }: { label?: string }) {
   return (
-    <div className="flex items-center gap-2 pl-0">
+    <div role="status" className="flex items-center gap-2 pl-0">
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-red-soft)] text-[var(--color-red)]">
         <Sparkles size={13} />
       </span>
