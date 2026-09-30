@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { MapPinned, CalendarDays, Sparkles, Ticket, User, Radar, RotateCcw, Bell, Heart } from "lucide-react";
 import { useDemoStore } from "@/state/useDemoStore";
 import { TopNav } from "@/components/shell/TopNav";
@@ -13,11 +13,12 @@ const tabs = [
 ];
 
 export function MakeMyTripAppShell() {
+  const isChat = useLocation().pathname === "/myra";
   const { toggleInspector, resetDemo } = useDemoStore();
   const [bellOpen, setBellOpen] = useState(false);
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col bg-[var(--color-bg)]">
+    <div className={`flex h-full min-w-0 flex-1 flex-col bg-[var(--color-bg)] ${isChat ? "chat-focused-shell" : ""}`}>
       <header className="product-topbar relative flex shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-2.5">
         <div className="flex items-center gap-3">
           <Link to="/" title="Back to MakeMyTrip home">

@@ -163,7 +163,7 @@ export default function PersonaSolo() {
 
   function handleComposerSend(text: string) {
     const isJourneyPrompt = step === 5 && text.trim() === MID_PROMPT;
-    const answer = step === 0 || isJourneyPrompt ? null : replyTo(text);
+    const answer = (step === 0 && text.trim() === persona.samplePrompt) || isJourneyPrompt ? null : replyTo(text);
     if (answer) {
       runWithThinking(() => setNotes(n => [...n, { id: crypto.randomUUID(), user: text, reply: answer, atStep: step }]), "Checking your trip details");
       return;
@@ -211,7 +211,7 @@ export default function PersonaSolo() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <ConversationThread>
+      <ConversationThread questions={renderNotes()} questionCount={notes.length}>
 
         {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && <MyraBubble>समझ गई — मैं दूर, कम भीड़ वाली और असली लोकल कल्चर वाली जगहें ढूंढ रही हूं, टूरिस्ट लिस्ट नहीं।</MyraBubble>}
@@ -372,7 +372,6 @@ export default function PersonaSolo() {
 
 
         {activityFeedback && <p role="status" className="activity-feedback">{activityFeedback}</p>}
-        {renderNotes()}
         {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 

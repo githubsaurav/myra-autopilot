@@ -206,7 +206,7 @@ export default function PersonaFamily() {
   }
 
   function handleComposerSend(text: string) {
-    const answer = step === 0 ? null : replyTo(text);
+    const answer = step === 0 && text.trim() === persona.samplePrompt ? null : replyTo(text);
     if (answer) {
       runWithThinking(() => setNotes(n => [...n, { id: crypto.randomUUID(), user: text, reply: answer, atStep: step }]), "Checking your trip details");
       return;
@@ -257,7 +257,7 @@ export default function PersonaFamily() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <ConversationThread>
+      <ConversationThread questions={renderNotes()} questionCount={notes.length}>
 
         {step >= 1 && <MyraBubble from="user">{sentIntent}</MyraBubble>}
         {step >= 1 && (
@@ -385,7 +385,6 @@ export default function PersonaFamily() {
         )}
 
 
-        {renderNotes()}
         {isThinking && <ThinkingBubble label={thinkingLabel} />}
       </ConversationThread>
 

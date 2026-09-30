@@ -1,6 +1,5 @@
 import { Sparkles } from "lucide-react";
 import { MyraHeader } from "@/components/myra/MyraHeader";
-import { CapabilityBanner } from "@/components/myra/CapabilityBanner";
 import { personas } from "@/data/demoPersonas";
 import { useDemoStore } from "@/state/useDemoStore";
 import type { PersonaId } from "@/types/demo";
@@ -44,7 +43,6 @@ export default function MyraWorkspacePage() {
         persona={persona}
         onChangePersona={setActivePersona}
       />
-      <CapabilityBanner label={persona.capabilityBadge} />
       <ActiveScenario key={activePersonaId} />
     </div>
   );

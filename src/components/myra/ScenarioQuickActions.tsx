@@ -11,7 +11,7 @@ export function ScenarioQuickActions({
   labels?: { restart?: string; escalate?: string };
 }) {
   return (
-    <div className="chat-utilities flex gap-1.5 overflow-x-auto border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2">
+    <details className="chat-tools"><summary>Trip tools</summary><div className="chat-utilities flex gap-1.5 overflow-x-auto border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2">
       <Link className="chat-utility-link" to="/plan"><CalendarDays size={12} />Itinerary</Link>
       <Link className="chat-utility-link" to="/bookings"><Ticket size={12} />Bookings</Link>
       <button
@@ -28,6 +28,6 @@ export function ScenarioQuickActions({
       >
         <Headset size={11} /> {labels?.escalate ?? "Support demo"}
       </button>
-    </div>
+    </div></details>
   );
 }

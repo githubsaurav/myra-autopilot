@@ -37,9 +37,10 @@ export function ChatComposer({ prefill, disabled, onSend }: {
   }
   return (
     <div className="composer-area">
-      <div className="suggested-prompts" aria-label="Suggested questions">
-        {(activePersonaId === "solo" ? ["लोकल अनुभव दिखाओ", "आज का प्लान", "मेरा बजट"] : ["What’s my itinerary today?", "Show my bookings", "What’s my budget?"]).map(prompt => <button key={prompt} disabled={disabled} onClick={() => { onSend(prompt); setValue(""); }}>{prompt}</button>)}
-      </div>
+      <details className="question-shortcuts"><summary>Ask a quick question</summary><div className="suggested-prompts" aria-label="Suggested questions">
+        {(activePersonaId === "solo" ? ["लोकल अनुभव दिखाओ", "आज का प्लान", "मेरा बजट"] : ["What’s my itinerary today?", "Show my bookings", "What’s my budget?"]).map(prompt => <button key={prompt} disabled={disabled} onClick={(event) => { onSend(prompt); const menu = event.currentTarget.closest("details"); if (menu) menu.open = false; }}>{prompt}</button>)}
+      </div></details>
+      {prefill && !value && <button className="restore-trip-prompt" disabled={disabled} onClick={() => { setValue(prefill); inputRef.current?.focus(); }}>Continue trip conversation →</button>}
       <div className="chat-composer">
         <Sparkles className="composer-sparkle" size={18} aria-hidden="true" />
         <textarea
