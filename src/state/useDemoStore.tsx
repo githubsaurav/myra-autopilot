@@ -2,7 +2,6 @@ import { emptyConversation, type SavedConversation } from "@/lib/travelAssistant
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoTrip, DestinationOption, InspectorSnapshot, JourneyStage, PersonaId, TravellerProfile } from "@/types/demo";
 import { travellers as defaultTravellers } from "@/data/demoTraveller";
-import { destinationOptions } from "@/data/demoInventory";
 import { buildFamilyTrip } from "@/data/demoTrip";
 import { buildSoloTrip } from "@/data/demoTripSolo";
 import { buildGroupTrip } from "@/data/demoTripGroup";
@@ -38,34 +37,11 @@ interface PersonaSeed {
   trip: DemoTrip | null;
 }
 
-/**
- * One account, three trip folders, each pre-filled at a distinct live stage so the prototype
- * is legible on first load without requiring a viewer to script through discovery from zero —
- * and so "Restart this scenario" / "Reset demo" return here, not to a blank slate:
- * Family/Vietnam is an ongoing, already-booked trip (Day 5) with the in-trip disruption one
- * step away; Solo is at the very start of curation — three offbeat options just surfaced,
- * nothing chosen yet; Group already has all 4 friends' preferences in and a stay vote live,
- * mid-planning, not yet booked.
- */
+/** Start new journeys with the brief; persisted journeys retain their saved progress. */
 const personaSeed: Record<PersonaId, PersonaSeed> = {
-  family: {
-    step: 4,
-    stage: "booking",
-    destinationId: "dest-vietnam",
-    trip: buildFamilyTrip(destinationOptions.family.find((d) => d.id === "dest-vietnam")!),
-  },
-  solo: {
-    step: 2,
-    stage: "discovery",
-    destinationId: null,
-    trip: null,
-  },
-  group: {
-    step: 3,
-    stage: "curation",
-    destinationId: "dest-goa",
-    trip: null,
-  },
+  family: { step: 0, stage: "discovery", destinationId: null, trip: null },
+  solo: { step: 0, stage: "discovery", destinationId: null, trip: null },
+  group: { step: 0, stage: "discovery", destinationId: null, trip: null },
 };
 
 const initialState: PersistedState = {

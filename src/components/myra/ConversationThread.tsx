@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { JourneyIntroduction } from "./JourneyGuidance";
 import { ArrowDown } from "lucide-react";
 
 export function ConversationThread({ children, questions, questionCount = 0 }: { children: ReactNode; questions?: ReactNode; questionCount?: number }) {
@@ -21,8 +22,16 @@ export function ConversationThread({ children, questions, questionCount = 0 }: {
     const scroller = scrollRef.current;
     const content = contentRef.current;
     if (!scroller || !content) return;
+    let previousHeight = 0;
     const observer = new ResizeObserver(() => {
-      if (followLatest.current) scroller.scrollTop = scroller.scrollHeight;
+      const height = content.scrollHeight;
+      if (followLatest.current) {
+        // Large responses should reveal their beginning, not skip to the last card.
+        scroller.scrollTop = previousHeight > 0 && height - previousHeight > scroller.clientHeight
+          ? Math.max(0, previousHeight - 32)
+          : scroller.scrollHeight;
+      }
+      previousHeight = height;
     });
     observer.observe(content);
     return () => observer.disconnect();
@@ -39,7 +48,7 @@ export function ConversationThread({ children, questions, questionCount = 0 }: {
     <div className="conversation-region">
       <div ref={scrollRef} onScroll={onScroll} className="conversation-thread app-scroll" role="region" tabIndex={0} aria-label="Conversation with Myra">
         <div ref={contentRef} className="conversation-content">
-          <div className="conversation-start"><span />YOUR NEXT CHAPTER STARTS HERE<span /></div>
+          <JourneyIntroduction />
           {children}
         </div>
       </div>

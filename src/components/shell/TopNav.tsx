@@ -18,7 +18,7 @@ export function TopNav() {
         Home
       </Link>
       <Link
-        to="/trip"
+        to="/myra"
         className={`rounded-full px-3 py-1.5 transition ${
           isProduct ? "bg-[var(--color-surface)] text-[var(--color-navy)] shadow-sm" : "text-[var(--color-slate)] hover:text-[var(--color-ink)]"
         }`}

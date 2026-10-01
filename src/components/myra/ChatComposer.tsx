@@ -56,7 +56,7 @@ export function ChatComposer({ prefill, disabled, onSend }: {
             }
           }}
           rows={1}
-          placeholder={disabled ? "Myra is preparing your reply…" : "A thought, a question, a change of plan…"}
+          placeholder={disabled ? "Myra is preparing your reply…" : "Ask about this trip, or choose an option above…"}
         />
         <button type="button" onClick={handleSend} disabled={disabled || !value.trim()} aria-label="Send">
           <ArrowUp size={20} />

@@ -1,3 +1,4 @@
+import { JourneyGuidance } from "@/components/myra/JourneyGuidance";
 import { Sparkles } from "lucide-react";
 import { MyraHeader } from "@/components/myra/MyraHeader";
 import { personas } from "@/data/demoPersonas";
@@ -24,7 +25,7 @@ export default function MyraWorkspacePage() {
           <span className="welcome-emblem"><Sparkles size={28} /></span>
           <span className="eyebrow">LESS TO ORGANISE. MORE TO EXPERIENCE.</span>
           <h2>Wherever you’re going,<br /><em>let’s make it yours.</em></h2>
-          <p>Pick up a journey. I’ll bring the context, the ideas, and a little peace of mind.</p>
+          <p>Choose a guided trip. Compare options, approve a change, and see your itinerary update—all in one conversation.</p>
           <div className="welcome-journeys">{personas.map(p => { const Icon = p.icon; return <button key={p.id} onClick={() => setActivePersona(p.id)}><span className={`welcome-icon welcome-${p.id}`}><Icon size={21} /></span><span><strong>{p.name}</strong><small>{p.capabilityBadge}</small></span><span aria-hidden="true">↗</span></button>; })}</div>
           <small>Three guided journeys · Sample data · Your progress stays on this device</small>
         </div>
@@ -43,6 +44,7 @@ export default function MyraWorkspacePage() {
         persona={persona}
         onChangePersona={setActivePersona}
       />
+      <JourneyGuidance />
       <ActiveScenario key={activePersonaId} />
     </div>
   );
